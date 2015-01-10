@@ -1,14 +1,37 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NeuralNetworkLibBase;
+using System.ComponentModel.Composition;
 
 namespace ShNeuralNetwork
 {
-    public class NeuralNetwork
+    [Export(typeof (INeuralNetwork))]
+    [ExportMetadata("Type", typeof(NeuralNetwork))]
+    public class NeuralNetwork : INeuralNetwork
     {
-        public IList<Layer> Layers
+        public IEnumerable<ILayer> Layers
         {
             get { return _layers; }
+        }
+
+        public ILayer InputLayer { get; private set; }
+        public ILayer OutputLayer { get; private set; }
+        public IEnumerable<ILayer> HiddenLayers { get; private set; }
+        public IEnumerable<IConnection> Connections { get; private set; }
+        public void Create(ConstructionParameters parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Train(double[] inputs, double[] outputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        List<double> INeuralNetwork.Calculate(double[] inputs)
+        {
+            throw new NotImplementedException();
         }
 
         public IList<Input> Inputs
@@ -21,6 +44,11 @@ namespace ShNeuralNetwork
         private readonly List<Layer> _layers;
         private readonly INormalization _inNorm;
         private readonly INormalization _outNorm;
+
+        public NeuralNetwork()
+        {
+            
+        }
 
         public NeuralNetwork(int inputs, IList<int> neuronsPerLayer, SquashingFunction squashingFunction, INormalization inNorm, INormalization outNorm)
         {

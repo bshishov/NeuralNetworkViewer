@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
+using NeuralNetworkLibBase;
 
 namespace ShNeuralNetwork
 {
-    public class Neuron
+    public class Neuron : INode
     {
         private readonly Link[] _incomingLinks;
         public double Output {get { return _output; }}
+        public IEnumerable<IConnection> Incoming { get { return _incomingLinks.ToList();  } }
+
         public IList<Link> IncomingLinks {
             get { return _incomingLinks; }
         }

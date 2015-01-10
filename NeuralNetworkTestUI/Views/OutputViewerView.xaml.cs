@@ -1,13 +1,13 @@
 ﻿using System.Windows.Controls;
 
-namespace NeuralNetworkTestUI.NeuralNetwork.Views
+namespace NeuralNetworkTestUI.Views
 {
     /// <summary>
     /// Interaction logic for WeightViewerView.xaml
     /// </summary>
-    public partial class WeightViewerView : UserControl
+    public partial class OutputViewerView : UserControl
     {
-        public WeightViewerView()
+        public OutputViewerView()
         {
             InitializeComponent();
         }

@@ -4,31 +4,44 @@ using System.Drawing;
 using System.Linq;
 using NeuralNetworkTestUI.Utilities;
 using OpenTK.Graphics.OpenGL;
-using ShNeuralNetwork;
+using NeuralNetworkLibBase;
 
-namespace NeuralNetworkTestUI.NeuralNetwork.Representation
+namespace NeuralNetworkTestUI.Representation
 {
     public class Representation
     {
+        public enum NeuronType
+        {
+            Input,
+            Hidden,
+            Output
+        }
+
         public class NeuronRepresentation
         {
             public PointF Position;
-            public readonly ShNeuralNetwork.Neuron Neuron;
+            public readonly INode Neuron;
             public Color BackGroundColor;
             public Color OutlineColor;
 
-            public NeuronRepresentation(Neuron neuron)
+            public NeuronRepresentation(INode neuron, NeuronType type)
             {
                 Neuron = neuron;
-                if (neuron is Input)
+
+                switch (type)
                 {
-                    BackGroundColor = Color.Salmon;
-                    OutlineColor = Color.DarkOrange;
-                }
-                else
-                {
-                    BackGroundColor = Color.Gray;
-                    OutlineColor = Color.DarkGray;
+                    case NeuronType.Input:
+                        BackGroundColor = Color.Salmon;
+                        OutlineColor = Color.DarkOrange;
+                        break;
+                    case NeuronType.Hidden:
+                        BackGroundColor = Color.Gray;
+                        OutlineColor = Color.DarkGray;
+                        break;
+                    case NeuronType.Output:
+                        BackGroundColor = Color.Salmon;
+                        OutlineColor = Color.DarkOrange;
+                        break;
                 }
             }
 
@@ -45,9 +58,9 @@ namespace NeuralNetworkTestUI.NeuralNetwork.Representation
             public NeuronRepresentation Start;
             public NeuronRepresentation End;
             public Color Color;
-            public readonly ShNeuralNetwork.Link Link;
+            public readonly IConnection Link;
 
-            public LinkRepresentation(Link link)
+            public LinkRepresentation(IConnection link)
             {
                 Link = link;
                 Color = Color.DarkOrange;
@@ -55,7 +68,8 @@ namespace NeuralNetworkTestUI.NeuralNetwork.Representation
 
             public void Draw()
             {
-                DrawingUtilities.DrawLine(Start.Position, End.Position, LinearInterp(Link.Weight));
+                if(Start != null)
+                    DrawingUtilities.DrawLine(Start.Position, End.Position, LinearInterp(Link.Weight));
             }
 
             public Color LinearInterp(double value)
@@ -72,11 +86,11 @@ namespace NeuralNetworkTestUI.NeuralNetwork.Representation
             }
         }
 
-        private ShNeuralNetwork.NeuralNetwork _network;
+        private INeuralNetwork _network;
         private readonly List<NeuronRepresentation> _neurons;
         private readonly List<LinkRepresentation> _links;
 
-        public Representation(ShNeuralNetwork.NeuralNetwork network)
+        public Representation(INeuralNetwork network)
         {
             _neurons = new List<NeuronRepresentation>();
             _links = new List<LinkRepresentation>();
@@ -87,38 +101,62 @@ namespace NeuralNetworkTestUI.NeuralNetwork.Representation
             var horizontalOffset = 0f;
             var verticalOffset = 0f;
 
-            var inputLayer = _network.Inputs;
-            verticalOffset = -(inputLayer.Count * verticalMargin) / 2f;
-            foreach (var input in inputLayer)
+
+            verticalOffset = -(_network.InputLayer.Nodes.Count() * verticalMargin) / 2f;
+            foreach (var neuron in _network.InputLayer.Nodes)
             {
-                _neurons.Add(new NeuronRepresentation(input)
+                _neurons.Add(new NeuronRepresentation(neuron, NeuronType.Input)
                 {
-                    Position = new PointF(horizontalOffset,verticalOffset)
+                    Position = new PointF(horizontalOffset, verticalOffset)
                 });
                 verticalOffset += verticalMargin;
             }
+
             horizontalOffset += horizontalMargin;
-            foreach (var layer in network.Layers)
+            foreach (var layer in network.HiddenLayers)
             {
-                verticalOffset = -(layer.Neurons.Count * verticalMargin) / 2f;
-                foreach (var neuron in layer.Neurons)
+                verticalOffset = -(layer.Nodes.Count() * verticalMargin) / 2f;
+                foreach (var neuron in layer.Nodes)
                 {
-                    _neurons.Add(new NeuronRepresentation(neuron)
+                    _neurons.Add(new NeuronRepresentation(neuron, NeuronType.Hidden)
                     {
                         Position = new PointF(horizontalOffset, verticalOffset)
                     });
                     verticalOffset += verticalMargin;
-                    foreach (var link in neuron.IncomingLinks)
+                    if(neuron.Incoming == null)
+                        continue;
+                    foreach (var link in neuron.Incoming)
                     {
                         _links.Add(new LinkRepresentation(link)
                         {
-                            Start = _neurons.Find(n=> n.Neuron == link.StartNeuron),
+                            Start = _neurons.Find(n=> n.Neuron == link.StartNode),
                             End = _neurons.Last()
                         });    
                     }
                 }
                 horizontalOffset += horizontalMargin;
             }
+
+            verticalOffset = -(_network.OutputLayer.Nodes.Count() * verticalMargin) / 2f;
+            foreach (var neuron in _network.OutputLayer.Nodes)
+            {
+                _neurons.Add(new NeuronRepresentation(neuron, NeuronType.Output)
+                {
+                    Position = new PointF(horizontalOffset, verticalOffset)
+                });
+                verticalOffset += verticalMargin;
+                if (neuron.Incoming == null)
+                    continue;
+                foreach (var link in neuron.Incoming)
+                {
+                    _links.Add(new LinkRepresentation(link)
+                    {
+                        Start = _neurons.Find(n => n.Neuron == link.StartNode),
+                        End = _neurons.Last()
+                    });
+                }
+            }
+
         }
 
         public void Draw()

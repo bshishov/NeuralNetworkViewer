@@ -5,25 +5,26 @@ using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
+using NeuralNetworkLibBase;
 using NeuralNetworkTestUI.Utilities;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Point = System.Drawing.Point;
 using UserControl = System.Windows.Controls.UserControl;
 
-namespace NeuralNetworkTestUI.NeuralNetwork.Controls
+namespace NeuralNetworkTestUI.Controls
 {
     /// <summary>
     /// Interaction logic for NeuralNetworkView.xaml
     /// </summary>
     public partial class GLControl: UserControl
     {
-        public static readonly DependencyProperty NetworkProperty = DependencyProperty.Register("Network", typeof(ShNeuralNetwork.NeuralNetwork), typeof(GLControl));
+        public static readonly DependencyProperty NetworkProperty = DependencyProperty.Register("Network", typeof(INeuralNetwork), typeof(GLControl));
 
-        private NeuralNetwork.Representation.Representation _representation;
-        public ShNeuralNetwork.NeuralNetwork Network
+        private Representation.Representation _representation;
+        public INeuralNetwork Network
         {
-            get { return (ShNeuralNetwork.NeuralNetwork)GetValue(NetworkProperty); }
+            get { return (INeuralNetwork)GetValue(NetworkProperty); }
             set { SetValue(NetworkProperty, value); }
         }
 
@@ -132,6 +133,11 @@ namespace NeuralNetworkTestUI.NeuralNetwork.Controls
                 _camera.Y -= (my - _camera.Y)*(_camera.ZoomRatio - 1)/_camera.ZoomRatio;
             }
             
+            GlPaint(this, null);
+        }
+
+        public void Refresh()
+        {
             GlPaint(this, null);
         }
 

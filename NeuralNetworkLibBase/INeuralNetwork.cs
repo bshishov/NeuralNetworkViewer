@@ -4,7 +4,10 @@ namespace NeuralNetworkLibBase
 {
     public interface INeuralNetwork
     {
-        IEnumerable<ILayer> Layers { get; }
+        ILayer InputLayer { get; }
+        ILayer OutputLayer { get; }
+
+        IEnumerable<ILayer> HiddenLayers { get; }
         IEnumerable<IConnection> Connections { get; }
 
         void Create(ConstructionParameters parameters);

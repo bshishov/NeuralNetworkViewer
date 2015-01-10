@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Net.Mime;
 using System.Windows;
 using Caliburn.Micro;
 using Gemini.Framework;
 using Gemini.Modules.Output;
-using ShNeuralNetwork;
+using NeuralNetworkLibBase;
+using NeuralNetworkTestUI.Messaging;
+using NeuralNetworkTestUI.Views;
 
-namespace NeuralNetworkTestUI.NeuralNetwork.ViewModels
+namespace NeuralNetworkTestUI.ViewModels
 {
     [Export(typeof(NeuralNetworkViewModel))]
     class NeuralNetworkViewModel : Document
@@ -17,63 +19,54 @@ namespace NeuralNetworkTestUI.NeuralNetwork.ViewModels
             get { return "Neural network"; }
         }
 
-        private ShNeuralNetwork.NeuralNetwork _network;
+        private INeuralNetwork _network;
         private readonly IOutput _output;
+        private IEventAggregator _events;
 
-        public ShNeuralNetwork.NeuralNetwork Network
+        public INeuralNetwork Network
         {
             get { return _network; }
             set
             {
                 _network = value;
                 NotifyOfPropertyChange(()=>Network);
+                _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.NewNetwork));
             }
         }
-        
-        public NeuralNetworkViewModel()
-        {
-            _output = IoC.Get<IOutput>();
-            _network = new ShNeuralNetwork.NeuralNetwork(2, new int[] { 5, 10, 5, 1 }, SquashingFunctions.Sigmoid,
-                new LinearNormalization(0, 10),
-                new LinearNormalization(-10, 50));
-            IoC.Get<WeightViewerViewModel>().SelectedNetwork = Network;
-        }
 
-        public NeuralNetworkViewModel(ConstructParameters parameters)
+        [ImportingConstructor]
+        public NeuralNetworkViewModel(IEventAggregator events)
         {
+            _events = events;
             _output = IoC.Get<IOutput>();
-            IoC.Get<WeightViewerViewModel>().SelectedNetwork = Network;
         }
 
         public void Train()
         {
             _output.AppendLine("Training initiated");
             var random = new Random();
-            const double samples = 10000.0;
+            const double samples = 5000.0;
             var left = samples;
             while (left-- > 0)
             {
-                if (left % 100 == 0) _output.Append(".");
+                if (left%100 == 0)
+                {
+                    _output.AppendLine(String.Format("Training: {0} / {1}", samples - left, samples));
+                    Application.Current.Dispatcher.Invoke(()=>
+                        ((NeuralNetworkView) GetView()).Refresh()
+                    );
+                    _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
+                }
                 var a = random.Next(1, 7);
                 var b = random.Next(1, 7);
                 var res = F(a, b);
-                _network.TrainSingle(
-                    new double[] { res },
-                    new double[] { a, b },
-                    left / samples + 0.1
-                    );
+                _network.Train( new double[] { a, b }, new double[] { res });
             }
-
-            _output.Append("!\n");
             _output.AppendLine("Training done");
+            _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
         }
 
-        public void OnTrainEnd()
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-                IoC.Get<WeightViewerViewModel>().UpdateCollections());
-        }
-
+        
         public void Test()
         {
             var random = new Random();
@@ -82,14 +75,14 @@ namespace NeuralNetworkTestUI.NeuralNetwork.ViewModels
                 var a = random.Next(1, 7);
                 var b = random.Next(1, 7);
                 var res = F(a, b);
-                var result = _network.Calculate(a, b);
+                var result = _network.Calculate(new double[]{a, b});
                 Console.WriteLine("Test{0}:\tf({1},{2}) = {3}\t(exact: {4})", i, a, b, result[0], res);
             }
         }
 
         static double F(double a, double b)
         {
-            return Math.Sin(a) - Math.Cos(b);
+            return a * b;
         }
     }
 }

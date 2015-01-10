@@ -1,8 +1,16 @@
+using NeuralNetworkLibBase;
+
 namespace ShNeuralNetwork
 {
-    public class Link
+    public class Link : IConnection
     {
         public Neuron StartNeuron;
-        public double Weight = 1;
+        public INode StartNode { get { return StartNeuron; } }
+        public double Weight { get; set; }
+
+        public Link()
+        {
+            Weight = 1;
+        }
     }
 }

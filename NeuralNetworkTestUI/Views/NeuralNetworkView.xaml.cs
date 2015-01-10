@@ -1,5 +1,7 @@
 ﻿using System.Windows.Controls;
-namespace NeuralNetworkTestUI.NeuralNetwork.Views
+using NeuralNetworkTestUI.Controls;
+
+namespace NeuralNetworkTestUI.Views
 {
     /// <summary>
     /// Interaction logic for NeuralNetworkView.xaml
@@ -9,6 +11,11 @@ namespace NeuralNetworkTestUI.NeuralNetwork.Views
         public NeuralNetworkView()
         {
             InitializeComponent();
+        }
+
+        public void Refresh()
+        {
+            ((GLControl) gl).Refresh();
         }
     }
 }

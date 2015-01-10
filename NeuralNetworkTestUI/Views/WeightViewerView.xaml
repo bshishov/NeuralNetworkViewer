@@ -1,14 +1,14 @@
-﻿<UserControl x:Class="NeuralNetworkTestUI.NeuralNetwork.Views.WeightViewerView"
+﻿<UserControl x:Class="NeuralNetworkTestUI.Views.WeightViewerView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:vm ="clr-namespace:NeuralNetworkTestUI.NeuralNetwork.ViewModels"
+             xmlns:vm ="clr-namespace:NeuralNetworkTestUI.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <TreeView ItemsSource="{Binding Collections}">
         <TreeView.Resources>
-            <HierarchicalDataTemplate DataType="{x:Type vm:NodeCollection}" ItemsSource="{Binding Members}">
+            <HierarchicalDataTemplate DataType="{x:Type vm:ConnectionNodeCollection}" ItemsSource="{Binding Members}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding Name}" />
                     <TextBlock Text=" [" Foreground="Blue" />
@@ -16,11 +16,11 @@
                     <TextBlock Text="]" Foreground="Blue" />
                 </StackPanel>
             </HierarchicalDataTemplate>
-            <DataTemplate DataType="{x:Type vm:Node}">
+            <DataTemplate DataType="{x:Type vm:ConnectionNode}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding Name}" />
                     <TextBlock Text=" (" Foreground="Green" />
-                    <TextBlock Text="{Binding Weight}" Foreground="Green" />
+                    <TextBlock Text="{Binding Value}" Foreground="Green" />
                     <TextBlock Text=")" Foreground="Green" />
                 </StackPanel>
             </DataTemplate>

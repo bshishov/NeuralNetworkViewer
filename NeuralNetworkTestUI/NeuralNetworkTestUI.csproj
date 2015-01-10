@@ -46,6 +46,9 @@
     <Reference Include="Gemini.Modules.Output">
       <HintPath>..\packages\Gemini.Modules.Output.0.5.0\lib\net40\Gemini.Modules.Output.dll</HintPath>
     </Reference>
+    <Reference Include="Gemini.Modules.PropertyGrid">
+      <HintPath>..\packages\Gemini.Modules.PropertyGrid.0.5.0\lib\net40\Gemini.Modules.PropertyGrid.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Lyncee.OpenTK.1.1.1173.43181\lib\OpenTK.dll</HintPath>
@@ -103,22 +106,39 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NeuralNetwork\Representation\Representation.cs" />
-    <Compile Include="NeuralNetwork\ConstructParameters.cs" />
-    <Compile Include="NeuralNetwork\ViewModels\WeightViewerViewModel.cs" />
-    <Compile Include="NeuralNetwork\Views\WeightViewerView.xaml.cs">
+    <Compile Include="Messaging\NetworkUpdatedMessage.cs" />
+    <Compile Include="MyAppBootstrapper.cs" />
+    <Compile Include="Representation\Representation.cs" />
+    <Compile Include="ViewModels\CalculationViewModel.cs" />
+    <Compile Include="ViewModels\NetworkCreationDialogViewModel.cs" />
+    <Compile Include="ViewModels\OutputViewerViewModel.cs" />
+    <Compile Include="ViewModels\TrainingViewModel.cs" />
+    <Compile Include="ViewModels\WeightViewerViewModel.cs" />
+    <Compile Include="Views\CalculationView.xaml.cs">
+      <DependentUpon>CalculationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\NetworkCreationDialogView.xaml.cs">
+      <DependentUpon>NetworkCreationDialogView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TrainingView.xaml.cs">
+      <DependentUpon>TrainingView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WeightViewerView.xaml.cs">
       <DependentUpon>WeightViewerView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OutputViewerView.xaml.cs">
+      <DependentUpon>OutputViewerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utilities\Camera.cs" />
     <Compile Include="Utilities\DrawingUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NeuralNetwork\Module.cs" />
-    <Compile Include="NeuralNetwork\ViewModels\NeuralNetworkViewModel.cs" />
-    <Compile Include="NeuralNetwork\Controls\GLControl.xaml.cs">
+    <Compile Include="Module.cs" />
+    <Compile Include="ViewModels\NeuralNetworkViewModel.cs" />
+    <Compile Include="Controls\GLControl.xaml.cs">
       <DependentUpon>GLControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="NeuralNetwork\Views\NeuralNetworkView.xaml.cs">
+    <Compile Include="Views\NeuralNetworkView.xaml.cs">
       <DependentUpon>NeuralNetworkView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -149,23 +169,39 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="NeuralNetwork\Controls\GLControl.xaml">
+    <Page Include="Controls\GLControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="NeuralNetwork\Views\NeuralNetworkView.xaml">
+    <Page Include="Views\CalculationView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="NeuralNetwork\Views\WeightViewerView.xaml">
+    <Page Include="Views\NetworkCreationDialogView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\NeuralNetworkView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TrainingView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WeightViewerView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\OutputViewerView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ShNeuralNetwork\ShNeuralNetwork.csproj">
-      <Project>{af3b8418-519b-4278-9085-53373f438ea8}</Project>
-      <Name>ShNeuralNetwork</Name>
+    <ProjectReference Include="..\NeuralNetworkLibBase\NeuralNetworkLibBase.csproj">
+      <Project>{d63179df-a865-49fd-8ca0-ef9b7b6b3c8b}</Project>
+      <Name>NeuralNetworkLibBase</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using NeuralNetworkLibBase;
 
 namespace ShNeuralNetwork
 {
-    public class Layer
+    public class Layer : ILayer
     {
         public readonly List<Neuron> Neurons = new List<Neuron>();
 
@@ -10,5 +11,7 @@ namespace ShNeuralNetwork
         {
             
         }
+
+        public IEnumerable<INode> Nodes { get { return Neurons; } }
     }
 }
