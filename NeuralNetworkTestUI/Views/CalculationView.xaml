@@ -6,10 +6,16 @@
              xmlns:vm="clr-namespace:NeuralNetworkTestUI.ViewModels"
              xmlns:cal="http://www.caliburnproject.org"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300"
+             d:DesignWidth="300"
+             d:DesignHeight="300"
              d:DataContext="{d:DesignInstance Type=vm:CalculationViewModel, IsDesignTimeCreatable=True}"
              cal:Bind.AtDesignTime="True">
     <Grid Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
         <StackPanel>
             <Label Content="Inputs" FontWeight="Bold"></Label>
             <ListBox Height="Auto" ItemsSource="{Binding Inputs}" BorderBrush="{x:Null}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
@@ -36,12 +42,12 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding Name}" />
-                            <TextBox Height="Auto" Grid.Column="1" Text="{Binding Value}" AcceptsReturn="True" TextWrapping="Wrap"/>
+                            <TextBox Height="Auto" Grid.Column="1" Text="{Binding Value}" AcceptsReturn="True" TextWrapping="Wrap" IsReadOnly="True"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <Button Content="Calculate" Margin="10,10,10,10" Height="30" cal:Message.Attach="[Event Click] = [Action OnCalculate($dataContext)]" Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"/>
         </StackPanel>
+        <Button Grid.Row="2" Content="Calculate" Margin="10,10,10,10" Height="30" cal:Message.Attach="[Event Click] = [Action OnCalculate($dataContext)]" Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" BorderBrush="{x:Null}"/>
     </Grid>
 </UserControl>

@@ -91,6 +91,7 @@ namespace NeuralNetworkTestUI.ViewModels
         public NetworkCreationDialogViewModel(IEventAggregator eventAggregator) : this()
         {
             _events = eventAggregator;
+            DisplayName = "Network creation";
         }
 
         public void OnOk(Object context)

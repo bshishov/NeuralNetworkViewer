@@ -6,75 +6,75 @@ using System.ComponentModel.Composition;
 
 namespace ShNeuralNetwork
 {
-    [Export(typeof (INeuralNetwork))]
-    [ExportMetadata("Type", typeof(NeuralNetwork))]
+    [Export(typeof(INeuralNetwork))]
     public class NeuralNetwork : INeuralNetwork
     {
-        public IEnumerable<ILayer> Layers
+        public ILayer InputLayer
         {
-            get { return _layers; }
+            get { return _inputs; }  
         }
 
-        public ILayer InputLayer { get; private set; }
-        public ILayer OutputLayer { get; private set; }
-        public IEnumerable<ILayer> HiddenLayers { get; private set; }
-        public IEnumerable<IConnection> Connections { get; private set; }
-        public void Create(ConstructionParameters parameters)
+        public ILayer OutputLayer
         {
-            throw new NotImplementedException();
+            get { return _layers.Last(); }
         }
 
-        public void Train(double[] inputs, double[] outputs)
+        public IEnumerable<ILayer> HiddenLayers
         {
-            throw new NotImplementedException();
-        }
-
-        List<double> INeuralNetwork.Calculate(double[] inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IList<Input> Inputs
-        {
-            get { return _inputs; }
-        }
-
-        private readonly List<Input> _inputs;
-        private readonly SquashingFunction _squashingFunction;
-        private readonly List<Layer> _layers;
-        private readonly INormalization _inNorm;
-        private readonly INormalization _outNorm;
-
-        public NeuralNetwork()
-        {
+            get { return _layers.Take(_layers.Count - 1); }
             
         }
 
-        public NeuralNetwork(int inputs, IList<int> neuronsPerLayer, SquashingFunction squashingFunction, INormalization inNorm, INormalization outNorm)
+        public IEnumerable<IConnection> Connections
+        {
+            get
+            {
+                var list = new List<IConnection>();
+                foreach (var layer in _layers)
+                {
+                    foreach (var node in layer.Neurons)
+                    {
+                        list.AddRange(node.IncomingLinks);
+                    }
+                }
+                return list;
+            }
+        }
+
+        private readonly Layer<Input> _inputs;
+        private SquashingFunction _squashingFunction;
+        private readonly List<Layer<Neuron>> _layers;
+        private INormalization _inNorm;
+        private INormalization _outNorm;
+
+        public NeuralNetwork()
+        {
+            _inputs = new Layer<Input>();
+            _layers = new List<Layer<Neuron>>();
+        }
+        
+        public void Create(ConstructionParameters parameters)
         {
             var random = new Random();
-            _squashingFunction = squashingFunction;
-            _inNorm = inNorm;
-            _outNorm = outNorm;
-            _inputs = new List<Input>();
-            _layers = new List<Layer>();
+            _squashingFunction = SquashingFunctions.Sigmoid;
+            _inNorm = new LinearNormalization(-10, 10);
+            _outNorm = new LinearNormalization(-100,100);
 
-
-            for (var i = 0; i < inputs; i++)
+            for (var i = 0; i < parameters.Inputs; i++)
             {
-                _inputs.Add(new Input());
+                _inputs.Neurons.Add(new Input());
             }
 
-            for (var index = 0; index < neuronsPerLayer.Count; index++)
+            for (var index = 0; index < parameters.HiddenLayers.Count + 1; index++)
             {
-                var neuronsCount = neuronsPerLayer[index];
-                var layer = new Layer();
+                var neuronsCount = index < parameters.HiddenLayers.Count ? parameters.HiddenLayers[index] : parameters.Outputs;
+                var layer = new Layer<Neuron>();
                 for (var i = 0; i < neuronsCount; i++)
                 {
-                    IEnumerable<Link> incoming ;
+                    IEnumerable<Link> incoming;
                     if (index == 0) // secondLayer
                     {
-                        incoming = _inputs.Select(n => new Link()
+                        incoming = _inputs.Neurons.Select(n => new Link()
                         {
                             StartNeuron = n,
                             Weight = random.NextDouble() - 0.5
@@ -93,16 +93,16 @@ namespace ShNeuralNetwork
                 _layers.Add(layer);
             }
         }
-
+        
         private double[] SingleProcess(params double[] inputs)
         {
-            if (inputs.Length != _inputs.Count)
+            if (inputs.Length != _inputs.Neurons.Count)
                 throw new Exception("Not enough inputs");
 
             //Set inputs
-            for (var index = 0; index < _inputs.Count; index++)
+            for (var index = 0; index < _inputs.Neurons.Count; index++)
             {
-                _inputs[index].Set(inputs[index]);
+                _inputs.Neurons[index].Set(inputs[index]);
             }
 
             // Compute
@@ -117,10 +117,10 @@ namespace ShNeuralNetwork
             return _layers.Last().Neurons.Select(n => n.Output).ToArray();
         }
 
-        public void TrainSingle(double[] expectedOutputsRaw, double[] inputsRaw, double trainSpeed = 0.5)
+        public void Train(double[] inputsRaw, double[] expectedOutputsRaw)
         {
             var outputLayer = _layers.Last();
-            if (inputsRaw.Length != _inputs.Count) throw new Exception("Not enough inputs");
+            if (inputsRaw.Length != _inputs.Neurons.Count) throw new Exception("Not enough inputs");
             if (expectedOutputsRaw.Length != outputLayer.Neurons.Count) throw new Exception("Not enough outputs");
             
             var inputs = inputsRaw.Select(_inNorm.Normalize).ToArray();
@@ -150,7 +150,7 @@ namespace ShNeuralNetwork
                     var layer = _layers[i];
                     foreach (var neuron in layer.Neurons)
                     {
-                        neuron.Step6_7(errorSumMap[neuron], _squashingFunction, trainSpeed);
+                        neuron.Step6_7(errorSumMap[neuron], _squashingFunction, 0.5);
                         foreach (var prev in neuron.IncomingLinks)
                         {
                             if (!errorSumMap.ContainsKey(prev.StartNeuron)) errorSumMap.Add(prev.StartNeuron, 0);
@@ -173,9 +173,9 @@ namespace ShNeuralNetwork
             //Console.WriteLine("Iterations spent: {0}", iterations);
         }
 
-        public double[] Calculate(params double[] inputs)
+        public List<double> Calculate(double[] inputs)
         {
-            return SingleProcess(inputs.Select(_inNorm.Normalize).ToArray()).Select(_outNorm.Denormalize).ToArray();
+            return SingleProcess(inputs.Select(_inNorm.Normalize).ToArray()).Select(_outNorm.Denormalize).ToList();
         }
     }
 }

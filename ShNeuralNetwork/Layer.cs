@@ -3,15 +3,21 @@ using NeuralNetworkLibBase;
 
 namespace ShNeuralNetwork
 {
-    public class Layer : ILayer
+    public class Layer<T> : ILayer
+        where T : Neuron
     {
-        public readonly List<Neuron> Neurons = new List<Neuron>();
+        public IEnumerable<INode> Nodes { get { return Neurons; } }
+        public readonly List<T> Neurons = new List<T>();
 
         public Layer()
         {
             
         }
 
-        public IEnumerable<INode> Nodes { get { return Neurons; } }
+        public Layer(List<T> neurons)
+        {
+            Neurons = neurons;
+        }
+
     }
 }

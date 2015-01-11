@@ -12,7 +12,7 @@ using NeuralNetworkTestUI.Views;
 namespace NeuralNetworkTestUI.ViewModels
 {
     [Export(typeof(NeuralNetworkViewModel))]
-    class NeuralNetworkViewModel : Document
+    class NeuralNetworkViewModel : Document, IHandle<NetworkUpdatedMessage>
     {
         public string DisplayName
         {
@@ -38,6 +38,7 @@ namespace NeuralNetworkTestUI.ViewModels
         public NeuralNetworkViewModel(IEventAggregator events)
         {
             _events = events;
+            _events.Subscribe(this);
             _output = IoC.Get<IOutput>();
         }
 
@@ -52,9 +53,6 @@ namespace NeuralNetworkTestUI.ViewModels
                 if (left%100 == 0)
                 {
                     _output.AppendLine(String.Format("Training: {0} / {1}", samples - left, samples));
-                    Application.Current.Dispatcher.Invoke(()=>
-                        ((NeuralNetworkView) GetView()).Refresh()
-                    );
                     _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
                 }
                 var a = random.Next(1, 7);
@@ -83,6 +81,12 @@ namespace NeuralNetworkTestUI.ViewModels
         static double F(double a, double b)
         {
             return a * b;
+        }
+
+        public void Handle(NetworkUpdatedMessage message)
+        {
+            if(message.UpdateType == NetworkUpdateType.SmallChanges)
+                ((NeuralNetworkView) GetView()).Refresh();
         }
     }
 }

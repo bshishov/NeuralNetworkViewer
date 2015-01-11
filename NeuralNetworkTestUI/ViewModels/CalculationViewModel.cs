@@ -30,7 +30,6 @@ namespace NeuralNetworkTestUI.ViewModels
             {
                 _network = value;
                 NotifyOfPropertyChange(() => SelectedNetwork);
-                Update();
             }
         }
 
@@ -92,7 +91,7 @@ namespace NeuralNetworkTestUI.ViewModels
             NotifyOfPropertyChange(() => Outputs);
         }
 
-        public void Update()
+        private void Update()
         {
             if(_network == null)
                 return;
@@ -115,7 +114,7 @@ namespace NeuralNetworkTestUI.ViewModels
                 _outputs.Add(new NamedValue()
                 {
                     Name = String.Format("Output {0}:", index++),
-                    Value = node.Output,
+                    Value = 0,
                 });
             }
 
@@ -131,25 +130,52 @@ namespace NeuralNetworkTestUI.ViewModels
             var inputs = Inputs.Select(i => i.Value).ToArray();
             output.AppendLine(String.Format("Initiated calculation with inputs: \n\n\t{0}\n", String.Join("\t",inputs)));
             var res = SelectedNetwork.Calculate(inputs);
+            
             var index = 0;
             foreach (var r in Outputs)
             {
                 r.Value = res[index++];
             }
-            output.AppendLine(String.Format("Calculation finished. Results:\n\n\t{0}\n", String.Join("\t", res)));
             NotifyOfPropertyChange(() => Outputs);
+
+            output.AppendLine(String.Format("Calculation finished. Results:\n\n\t{0}\n", String.Join("\t", res)));
             _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
         }
 
         public void Handle(NetworkUpdatedMessage message)
         {
-            this.SelectedNetwork = message.Network;
+            if (message.UpdateType == NetworkUpdateType.NewNetwork)
+            {
+                this.SelectedNetwork = message.Network;
+                Update();
+            }
         }
     }
 
-    public class NamedValue
+    public class NamedValue : PropertyChangedBase
     {
-        public string Name { get; set; }
-        public double Value { get; set; }
+        private string _name;
+
+        public string Name
+        {
+            get { return _name; }
+            set
+            {
+                _name = value;
+                NotifyOfPropertyChange(() => Name);
+            }
+        }
+
+        private double _value;
+
+        public double Value
+        {
+            get { return _value; }
+            set
+            {
+                _value = value;
+                NotifyOfPropertyChange(() => Value);
+            }
+        }
     }
 }

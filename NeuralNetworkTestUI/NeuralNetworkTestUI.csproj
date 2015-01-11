@@ -34,8 +34,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="Caliburn.Micro">
       <HintPath>..\packages\Caliburn.Micro.1.5.2\lib\net45\Caliburn.Micro.dll</HintPath>
+    </Reference>
+    <Reference Include="ExpressionEvaluator">
+      <HintPath>..\packages\ExpressionEvaluator.2.0.1.0\lib\net40\ExpressionEvaluator.dll</HintPath>
     </Reference>
     <Reference Include="Gemini">
       <HintPath>..\packages\GeminiWpf.0.5.0\lib\net40\Gemini.dll</HintPath>
@@ -56,6 +62,15 @@
     <Reference Include="OpenTK.GLControl, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Lyncee.OpenTK.GLControl.1.1.1173.43182\lib\OpenTK.GLControl.dll</HintPath>
+    </Reference>
+    <Reference Include="OxyPlot">
+      <HintPath>..\packages\OxyPlot.Core.2014.1.546\lib\portable-net4+sl4+wp71+win8\OxyPlot.dll</HintPath>
+    </Reference>
+    <Reference Include="OxyPlot.Wpf">
+      <HintPath>..\packages\OxyPlot.Wpf.2014.1.546\lib\net45\OxyPlot.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="OxyPlot.Xps">
+      <HintPath>..\packages\OxyPlot.Wpf.2014.1.546\lib\net45\OxyPlot.Xps.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -106,19 +121,29 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Messaging\GenerationParametersSet.cs" />
+    <Compile Include="Messaging\NetworkTestResult.cs" />
     <Compile Include="Messaging\NetworkUpdatedMessage.cs" />
     <Compile Include="MyAppBootstrapper.cs" />
     <Compile Include="Representation\Representation.cs" />
     <Compile Include="ViewModels\CalculationViewModel.cs" />
+    <Compile Include="ViewModels\GenerateDataViewModel.cs" />
     <Compile Include="ViewModels\NetworkCreationDialogViewModel.cs" />
     <Compile Include="ViewModels\OutputViewerViewModel.cs" />
+    <Compile Include="ViewModels\StatisticsViewModel.cs" />
     <Compile Include="ViewModels\TrainingViewModel.cs" />
     <Compile Include="ViewModels\WeightViewerViewModel.cs" />
     <Compile Include="Views\CalculationView.xaml.cs">
       <DependentUpon>CalculationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\GenerateDataView.xaml.cs">
+      <DependentUpon>GenerateDataView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\NetworkCreationDialogView.xaml.cs">
       <DependentUpon>NetworkCreationDialogView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\StatisticsView.xaml.cs">
+      <DependentUpon>StatisticsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TrainingView.xaml.cs">
       <DependentUpon>TrainingView.xaml</DependentUpon>
@@ -177,11 +202,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\GenerateDataView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\NetworkCreationDialogView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\NeuralNetworkView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\StatisticsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

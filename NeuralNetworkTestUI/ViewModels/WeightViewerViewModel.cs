@@ -45,7 +45,7 @@ namespace NeuralNetworkTestUI.ViewModels
             if (_network == null)
                 return;
             Collections.Clear();
-            var inputCollection = new ConnectionNodeCollection() { Name = "Connections" };
+            
 
             
             foreach (var layer in _network.HiddenLayers)
@@ -58,7 +58,7 @@ namespace NeuralNetworkTestUI.ViewModels
                 {
                     foreach (var connection in neuron.Incoming)
                     {
-                        inputCollection.Members.Add(new ConnectionNode(connection)
+                        collection.Members.Add(new ConnectionNode(connection)
                         {
                             Name = "Connection",
                         });
@@ -70,15 +70,19 @@ namespace NeuralNetworkTestUI.ViewModels
             
             foreach (var neuron in _network.OutputLayer.Nodes)
             {
+                var collection = new ConnectionNodeCollection()
+                {
+                    Name = "Connections"
+                };
                 foreach (var connection in neuron.Incoming)
                 {
-                    inputCollection.Members.Add(new ConnectionNode(connection)
+                    collection.Members.Add(new ConnectionNode(connection)
                     {
                         Name = "Connection",                        
                     });    
                 }
+                Collections.Add(collection); 
             }
-            Collections.Add(inputCollection); 
         }
 
         public ObservableCollection<ConnectionNodeCollection> Collections { get; set; }
