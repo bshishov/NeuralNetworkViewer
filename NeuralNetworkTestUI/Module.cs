@@ -33,7 +33,7 @@ namespace NeuralNetworkTestUI
             view.Add(new MenuItem("Weight Viewer", OpenWeightViewer));
             view.Add(new MenuItem("Neural Network", ShowNetwork));
             view.Add(new MenuItem("Calculation", ShowCalculation));
-            view.Add(new MenuItem("Test Results", ShowTestResults));
+            view.Add(new MenuItem("Statistics Viewer", ShowTestResults));
             view.Add(new MenuItem("Training", ShowTraining));
             MainMenu.All
                 .First(x => x.Name == "File")

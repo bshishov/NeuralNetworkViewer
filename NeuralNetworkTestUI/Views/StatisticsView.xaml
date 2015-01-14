@@ -22,6 +22,46 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <oxy:PlotView Grid.Column="1" Model="{Binding ActivePlotModel}"></oxy:PlotView>
+        <Grid Grid.Column="1" Margin="3,3,3,3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Column="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,2,0" Text="X Axis"/>
+                <ComboBox  Grid.Column="1" VerticalAlignment="Center" ItemsSource="{Binding SelectedStatistic.Inputs}" SelectedItem="{Binding SelectedStatistic.SelectedAxisX}" SelectedIndex="0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="5,0,2,0" Text="Y Axis" />
+                <ComboBox  Grid.Column="3" VerticalAlignment="Center" ItemsSource="{Binding SelectedStatistic.Inputs}" SelectedItem="{Binding SelectedStatistic.SelectedAxisY}" SelectedIndex="0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="5,0,2,0" Text="Value" />
+                <ComboBox  Grid.Column="5" VerticalAlignment="Center" ItemsSource="{Binding SelectedStatistic.Values}" SelectedItem="{Binding SelectedStatistic.SelectedValue}" SelectedIndex="0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+            <oxy:PlotView Margin="0,5,0,0" Grid.Row="1" Model="{Binding SelectedStatistic.Model}" HorizontalAlignment="Stretch"></oxy:PlotView>
+        </Grid>
     </Grid>
 </UserControl>

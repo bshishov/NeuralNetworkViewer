@@ -16,6 +16,7 @@ using NeuralNetworkTestUI.Messaging;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using Xceed.Wpf.DataGrid;
 
 namespace NeuralNetworkTestUI.ViewModels
 {
@@ -173,12 +174,32 @@ namespace NeuralNetworkTestUI.ViewModels
 
         public void OnTest(object context)
         {
-            var test = new NetworkTestResult("Test");
+            var test = new NetworkTestResult("Output error");
             var rows = Data.AsEnumerable().ToList();
             var inputs = new double[Network.InputLayer.Nodes.Count()];
             var outputs = new double[Network.OutputLayer.Nodes.Count()];
             var index = 0;
 
+            foreach (var node in Network.InputLayer.Nodes)
+            {
+                test.Inputs.Add(new StatisticsRecord()
+                {
+                    Name = String.Format("Input {0}", index++),
+                    Values = new double[rows.Count]
+                });
+            }
+
+            index = 0;
+            foreach (var node in Network.OutputLayer.Nodes)
+            {
+                test.Values.Add(new StatisticsRecord()
+                {
+                    Name = String.Format("Error of output {0}", index++),
+                    Values = new double[rows.Count]
+                });
+            }
+
+            var rowIndex = 0;
             foreach (var row in rows)
             {
                 var rowData = row.ItemArray;
@@ -187,12 +208,14 @@ namespace NeuralNetworkTestUI.ViewModels
                 for (var i = 0; i < outputs.Length; i++)
                     outputs[i] = Convert.ToDouble(rowData[i + inputs.Length]);
                 var networkOutputs = _network.Calculate(inputs);
-                test.Records.Add(new StatisticsRecord()
-                {
-                    Inputs = inputs,
-                    Outputs = networkOutputs.ToArray(),
-                    Values = networkOutputs.Select((o,i)=>Math.Abs(o - outputs[i])).ToArray()
-                });
+
+                for (var i = 0; i < inputs.Length; i++)
+                    test.Inputs[i].Values[rowIndex] = inputs[i];
+
+                for (var i = 0; i < outputs.Length; i++)
+                    test.Values[i].Values[rowIndex] = Math.Abs(outputs[i] - networkOutputs[i]);
+
+                rowIndex++;
             }
             
             _events.Publish(test);

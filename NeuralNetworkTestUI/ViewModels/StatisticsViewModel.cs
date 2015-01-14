@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Linq;
 using Caliburn.Micro;
 using Gemini.Framework;
 using Gemini.Framework.Services;
@@ -17,17 +18,6 @@ namespace NeuralNetworkTestUI.ViewModels
         public override PaneLocation PreferredLocation
         {
             get { return PaneLocation.Left; }
-        }
-
-        private PlotModel _activePlotModel;
-        public PlotModel ActivePlotModel
-        {
-            get { return _activePlotModel; }
-            set
-            {
-                _activePlotModel = value;
-                NotifyOfPropertyChange(() => ActivePlotModel);
-            }
         }
 
         private ObservableCollection<Statistic> _statistics;
@@ -49,7 +39,6 @@ namespace NeuralNetworkTestUI.ViewModels
             {
                 _selectedStatistic = value;
                 NotifyOfPropertyChange(() => SelectedStatistic);
-                ActivePlotModel = _selectedStatistic != null ? _selectedStatistic.PlotModel : null;
             }
         }
 
@@ -57,6 +46,7 @@ namespace NeuralNetworkTestUI.ViewModels
         [ImportingConstructor]
         public StatisticsViewModel(IEventAggregator events)
         {
+            DisplayName = "Statistics viever";
             _events = events;
             _events.Subscribe(this);
             Statistics = new ObservableCollection<Statistic>();
@@ -67,54 +57,13 @@ namespace NeuralNetworkTestUI.ViewModels
         {
             if (message.UpdateType == NetworkUpdateType.NewNetwork)
             {
-                ActivePlotModel = new PlotModel {Title = "Test Results", Subtitle = "of a neural network"};
                 Statistics = new ObservableCollection<Statistic>();
             }
         }
 
         public void Handle(NetworkTestResult message)
         {
-            var statistic = new Statistic() {Name = message.StatisticName, Time = DateTime.Now};
-
-            var model = new PlotModel() {
-                Title = String.Format("{0} ({1})", statistic.Name, statistic.Time)
-            };
-
-            /*
-             var linearAxis1 = new LinearAxis
-                {
-                    MajorGridlineStyle = LineStyle.Solid,
-                    MinorGridlineStyle = LineStyle.Dot
-                };
-                model.Axes.Add(linearAxis1);
-                var linearColorAxis = new LinearColorAxis
-                {
-                    HighColor = OxyColors.Gray,
-                    LowColor = OxyColors.Black,
-                    Maximum = 1,
-                    Minimum = 0,
-                    Position = AxisPosition.Right,
-                    IsZoomEnabled = false,
-                    IsPanEnabled = false
-                };
-                model.Axes.Add(linearColorAxis);
-                var linearAxis2 = new LinearAxis
-                {
-                    MajorGridlineStyle = LineStyle.Solid,
-                    MinorGridlineStyle = LineStyle.Dot,
-                    Position = AxisPosition.Bottom,
-                    IsZoomEnabled = false,
-                    IsPanEnabled = false
-                };
-                model.Axes.Add(linearAxis2);
-             */
-
-            Statistics.Add(new Statistic()
-            {
-                Name = message.StatisticName,
-                Time = DateTime.Now
-
-            });
+            Statistics.Add(new Statistic(message));
         }
     }
 
@@ -142,15 +91,154 @@ namespace NeuralNetworkTestUI.ViewModels
             }
         }
 
-        private PlotModel _plotModel;
-        public PlotModel PlotModel
+        private PlotModel _model;
+        public PlotModel Model
         {
-            get { return _plotModel; }
+            get { return _model; }
             set
             {
-                _plotModel = value;
-                NotifyOfPropertyChange(() => PlotModel);
+                _model = value;
+                NotifyOfPropertyChange(() => Model);
             }
+        }
+
+        private ObservableCollection<StatisticsRecord> _inputs;
+        public ObservableCollection<StatisticsRecord> Inputs
+        {
+            get { return _inputs; }
+            set
+            {
+                _inputs = value;
+                NotifyOfPropertyChange(() => Inputs);
+            }
+        }
+
+        private ObservableCollection<StatisticsRecord> _values;
+        public ObservableCollection<StatisticsRecord> Values
+        {
+            get { return _values; }
+            set
+            {
+                _values = value;
+                NotifyOfPropertyChange(() => Values);
+            }
+        }
+
+        private StatisticsRecord _selectedAxisX;
+        public StatisticsRecord SelectedAxisX
+        {
+            get { return _selectedAxisX; }
+            set
+            {
+                _selectedAxisX = value;
+                NotifyOfPropertyChange(() => SelectedAxisX);
+                UpdatePlotModel();
+            }
+        }
+
+        private StatisticsRecord _selectedAxisY;
+        public StatisticsRecord SelectedAxisY
+        {
+            get { return _selectedAxisY; }
+            set
+            {
+                _selectedAxisY = value;
+                NotifyOfPropertyChange(() => SelectedAxisY);
+                UpdatePlotModel();
+            }
+        }
+
+
+        private StatisticsRecord _selectedValue;
+        public StatisticsRecord SelectedValue
+        {
+            get { return _selectedValue; }
+            set
+            {
+                _selectedValue = value;
+                NotifyOfPropertyChange(() => SelectedValue);
+                UpdatePlotModel();
+            }
+        }
+
+        public Statistic(NetworkTestResult results)
+        {
+            Model = new PlotModel() {Title = "QWE", Subtitle = "ASD"};
+            Inputs = new ObservableCollection<StatisticsRecord>(results.Inputs);
+            Values = new ObservableCollection<StatisticsRecord>(results.Values);
+            Name = results.StatisticName;
+            Time = DateTime.Now;
+            SelectedAxisX = Inputs.First();
+            SelectedAxisY = Inputs.Last();
+            SelectedValue = Values.First();
+            UpdatePlotModel();
+        }
+
+        private void UpdatePlotModel()
+        {
+            if (SelectedAxisX == null || SelectedAxisY == null || SelectedValue == null)
+                return;
+
+            if(SelectedAxisX.Values.Length != SelectedAxisY.Values.Length || 
+                SelectedAxisX.Values.Length != SelectedValue.Values.Length)
+                return;
+
+            var model = new PlotModel()
+            {
+                Title = Name,
+                Subtitle = Time.ToString()
+            };
+
+            var linearAxis1 = new LinearAxis
+            {
+                Title = SelectedAxisY.Name,
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+                IsZoomEnabled = false,
+                IsPanEnabled = false
+            };
+            model.Axes.Add(linearAxis1);
+
+            var linearAxis2 = new LinearAxis
+            {
+                Title = SelectedAxisX.Name,
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+                Position = AxisPosition.Bottom,
+                IsZoomEnabled = false,
+                IsPanEnabled = false
+            };
+            model.Axes.Add(linearAxis2);
+
+            var linearColorAxis = new LinearColorAxis
+            {
+                //Title = SelectedValue.Name,
+                HighColor = OxyColors.Gray,
+                LowColor = OxyColors.Black,
+                Maximum = 1,
+                Minimum = 0,
+                Position = AxisPosition.Right,
+                IsZoomEnabled = false,
+                IsPanEnabled = false
+            };
+            model.Axes.Add(linearColorAxis);
+            var series = new ScatterSeries()
+            {
+                Title = SelectedValue.Name,
+                MarkerType = MarkerType.Triangle
+            };
+
+
+            for (var i = 0; i < SelectedAxisX.Values.Length; i++)
+            {
+                var xVal = SelectedAxisX.Values[i];
+                var yVal = SelectedAxisY.Values[i];
+                var vVal = SelectedValue.Values[i];
+                series.Points.Add(new ScatterPoint(xVal,yVal,3,vVal));
+            }
+
+            model.Series.Add(series);
+            this.Model = model;
         }
     }
 }

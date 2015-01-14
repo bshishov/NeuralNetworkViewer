@@ -17,7 +17,7 @@
             <RowDefinition Height="30" />
         </Grid.RowDefinitions>
         <Label Content="Neural network" Width="auto"/>
-        <ComboBox  Width="auto" Grid.Column="1" ItemsSource="{Binding NetworksAvailable}" SelectedItem="{Binding SelectedNetwork}" VerticalContentAlignment="Center"/>
+        <ComboBox  Width="auto" Grid.Column="1" ItemsSource="{Binding NetworksAvailable}" SelectedItem="{Binding SelectedNetwork}" VerticalContentAlignment="Center" SelectedIndex="0"/>
         
         <xctk:PropertyGrid 
             SelectedObject="{Binding Parameters}"

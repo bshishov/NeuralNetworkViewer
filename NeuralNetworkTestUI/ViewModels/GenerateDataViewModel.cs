@@ -38,8 +38,8 @@ namespace NeuralNetworkTestUI.ViewModels
                 _inputs.Add(new InputGenerationParameter()
                 {
                     Name = "Input " + index++,
-                    From = -100,
-                    To = 100
+                    From = -10,
+                    To = 10
                 });
             }
 
