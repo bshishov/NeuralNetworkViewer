@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using NeuralNetworkLibBase;
 using System.ComponentModel.Composition;
@@ -9,6 +11,33 @@ namespace ShNeuralNetwork
     [Export(typeof(INeuralNetwork))]
     public class NeuralNetwork : INeuralNetwork
     {
+        class ConstructionArgs
+        {
+            [Category("Basic")]
+            [Description("Number of inputs of network")]
+            public int Inputs { get; set; }
+
+            [Category("Basic")]
+            [Description("Number of outputs of network")]
+            public int Outputs { get; set; }
+
+            [Category("Basic")]
+            [Description("Hidden layers defenition, each number represents number of neurons per layer")]
+            public ObservableCollection<int> HiddenLayers { get; set; }
+
+            [Category("Detailed")]
+            [Description("Function used to calculate weight of a connection")]
+            public SquashingFunctions SquashingFunction { get; set; }
+
+            public ConstructionArgs()
+            {
+                Inputs = 2;
+                Outputs = 1;
+                HiddenLayers = new ObservableCollection<int>(){4,4,4};
+                SquashingFunction = SquashingFunctions.Sigmoid;
+            }
+        }
+
         public ILayer InputLayer
         {
             get { return _inputs; }  
@@ -41,6 +70,8 @@ namespace ShNeuralNetwork
             }
         }
 
+        public Type ArgsType { get { return typeof (ConstructionArgs); } }
+
         private readonly Layer<Input> _inputs;
         private SquashingFunction _squashingFunction;
         private readonly List<Layer<Neuron>> _layers;
@@ -52,22 +83,26 @@ namespace ShNeuralNetwork
             _inputs = new Layer<Input>();
             _layers = new List<Layer<Neuron>>();
         }
-        
-        public void Create(ConstructionParameters parameters)
+
+        public void Create(object argsRaw)
         {
+            var args = argsRaw as ConstructionArgs;
+            if(args == null)
+                throw new Exception("Wrong arguments");
+
             var random = new Random();
-            _squashingFunction = SquashingFunctions.Sigmoid;
             _inNorm = new LinearNormalization(-10, 10);
             _outNorm = new LinearNormalization(-100,100);
+            _squashingFunction = SquashingFunction.FromType(args.SquashingFunction);
 
-            for (var i = 0; i < parameters.Inputs; i++)
+            for (var i = 0; i < args.Inputs; i++)
             {
                 _inputs.Neurons.Add(new Input());
             }
 
-            for (var index = 0; index < parameters.HiddenLayers.Count + 1; index++)
+            for (var index = 0; index < args.HiddenLayers.Count + 1; index++)
             {
-                var neuronsCount = index < parameters.HiddenLayers.Count ? parameters.HiddenLayers[index] : parameters.Outputs;
+                var neuronsCount = index < args.HiddenLayers.Count ? args.HiddenLayers[index] : args.Outputs;
                 var layer = new Layer<Neuron>();
                 for (var i = 0; i < neuronsCount; i++)
                 {

@@ -13,13 +13,8 @@ using OxyPlot.Series;
 namespace NeuralNetworkTestUI.ViewModels
 {
     [Export(typeof(StatisticsViewModel))]
-    class StatisticsViewModel : Tool, IHandle<NetworkUpdatedMessage>, IHandle<NetworkTestResult>
+    class StatisticsViewModel : Document, IHandle<NetworkUpdatedMessage>, IHandle<NetworkTestResult>
     {
-        public override PaneLocation PreferredLocation
-        {
-            get { return PaneLocation.Left; }
-        }
-
         private ObservableCollection<Statistic> _statistics;
         public ObservableCollection<Statistic> Statistics
         {
@@ -46,7 +41,7 @@ namespace NeuralNetworkTestUI.ViewModels
         [ImportingConstructor]
         public StatisticsViewModel(IEventAggregator events)
         {
-            DisplayName = "Statistics viever";
+            DisplayName = "Statistics viewer";
             _events = events;
             _events.Subscribe(this);
             Statistics = new ObservableCollection<Statistic>();

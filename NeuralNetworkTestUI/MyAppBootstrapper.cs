@@ -17,8 +17,7 @@ namespace NeuralNetworkTestUI
         #region Properties
 
         protected CompositionContainer Container { get; set; }
-        private readonly SimpleContainer _container =
-            new SimpleContainer();
+        private readonly SimpleContainer _container = new SimpleContainer();
         #endregion
         
         #region Methods

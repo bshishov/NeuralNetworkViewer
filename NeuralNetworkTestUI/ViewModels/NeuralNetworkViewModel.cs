@@ -42,47 +42,6 @@ namespace NeuralNetworkTestUI.ViewModels
             _output = IoC.Get<IOutput>();
         }
 
-        public void Train()
-        {
-            _output.AppendLine("Training initiated");
-            var random = new Random();
-            const double samples = 5000.0;
-            var left = samples;
-            while (left-- > 0)
-            {
-                if (left%100 == 0)
-                {
-                    _output.AppendLine(String.Format("Training: {0} / {1}", samples - left, samples));
-                    _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
-                }
-                var a = random.Next(1, 7);
-                var b = random.Next(1, 7);
-                var res = F(a, b);
-                _network.Train( new double[] { a, b }, new double[] { res });
-            }
-            _output.AppendLine("Training done");
-            _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
-        }
-
-        
-        public void Test()
-        {
-            var random = new Random();
-            for (int i = 0; i < 100; i++)
-            {
-                var a = random.Next(1, 7);
-                var b = random.Next(1, 7);
-                var res = F(a, b);
-                var result = _network.Calculate(new double[]{a, b});
-                Console.WriteLine("Test{0}:\tf({1},{2}) = {3}\t(exact: {4})", i, a, b, result[0], res);
-            }
-        }
-
-        static double F(double a, double b)
-        {
-            return a * b;
-        }
-
         public void Handle(NetworkUpdatedMessage message)
         {
             if(message.UpdateType == NetworkUpdateType.SmallChanges)

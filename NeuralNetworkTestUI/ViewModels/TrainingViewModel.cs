@@ -11,6 +11,7 @@ using Gemini.Framework;
 using Gemini.Framework.Results;
 using Gemini.Framework.Services;
 using Gemini.Modules.Output;
+using Gemini.Modules.Shell.Views;
 using NeuralNetworkLibBase;
 using NeuralNetworkTestUI.Messaging;
 using OxyPlot;
@@ -219,6 +220,7 @@ namespace NeuralNetworkTestUI.ViewModels
             }
             
             _events.Publish(test);
+            Show.Document<StatisticsViewModel>();
         }
 
         private DataTable InitTable()

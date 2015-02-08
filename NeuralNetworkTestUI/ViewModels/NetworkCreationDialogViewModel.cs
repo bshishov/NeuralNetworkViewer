@@ -19,12 +19,7 @@ namespace NeuralNetworkTestUI.ViewModels
     class NetworkCreationDialogViewModel : WindowBase
     {
         private readonly IEventAggregator _events;
-        private ConstructionParameters _parameters = new ConstructionParameters()
-        {
-            HiddenLayers = new List<int>{10,15,10},
-            Inputs = 2,
-            Outputs = 1
-        };
+        private Object _parameters;
 
         [ImportMany(typeof(INeuralNetwork))]
         private IEnumerable<INeuralNetwork> _networkTypes;
@@ -49,6 +44,7 @@ namespace NeuralNetworkTestUI.ViewModels
             {
                 _selectedNetwork = value;
                 NotifyOfPropertyChange(() => SelectedNetwork);
+                Parameters = Activator.CreateInstance(_selectedNetwork.ArgsType);
             }
         }
 
@@ -70,7 +66,7 @@ namespace NeuralNetworkTestUI.ViewModels
             _networksAvailable = new ObservableCollection<INeuralNetwork>(_networkTypes);
         }
 
-        public ConstructionParameters Parameters
+        public Object Parameters
         {
             get { return _parameters; }
             set

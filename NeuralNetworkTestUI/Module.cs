@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using Caliburn.Micro;
 using Gemini.Framework;
 using Gemini.Framework.Results;
-using Gemini.Modules.Inspector;
 using Gemini.Modules.MainMenu.Models;
-using Gemini.Modules.Output.ViewModels;
 using NeuralNetworkTestUI.ViewModels;
-using NeuralNetworkTestUI.Views;
 
 
 namespace NeuralNetworkTestUI
@@ -17,17 +13,16 @@ namespace NeuralNetworkTestUI
     [Export(typeof(IModule))]
     class Module : ModuleBase
     {
-        [Import]
-        private NeuralNetworkViewModel _neuralNetworkViewModel;
-        
-        public override void Initialize()
-        {           
-            MainMenu.Add(
-                new MenuItem("Neural Network")
-                {
-                    new MenuItem("Train", Train)
-                });
+        [Import] NeuralNetworkViewModel _neuralNetworkViewModel;
+        [Import] CalculationViewModel _calculationViewModel;
+        [Import] StatisticsViewModel _statisticsViewModel;
+        [Import] GenerateDataViewModel _generateDataViewModel;
+        [Import] OutputViewerViewModel _outputViewerViewModel;
+        [Import] WeightViewerViewModel _weightViewerViewModel;
+        [Import] NetworkCreationDialogViewModel _networkCreationDialogViewModel;
 
+        public override void Initialize()
+        {   
             var view = MainMenu.All.First(x => x.Name == "View");
             view.Add(new MenuItem("Output Viewer", OpenOutputViewer));
             view.Add(new MenuItem("Weight Viewer", OpenWeightViewer));
@@ -38,15 +33,6 @@ namespace NeuralNetworkTestUI
             MainMenu.All
                 .First(x => x.Name == "File")
                 .Add(new MenuItem("Create network", CreateNetwork));
-        }
-
-        private IEnumerable<IResult> Train()
-        {
-            yield return new LambdaResult((c) =>
-            {
-                var action = new System.Action(() => ((NeuralNetworkViewModel)Shell.ActiveItem).Train());
-                action.BeginInvoke(new AsyncCallback((res)=> {}), this);
-            });
         }
 
         private IEnumerable<IResult> OpenOutputViewer()
@@ -71,7 +57,7 @@ namespace NeuralNetworkTestUI
 
         private IEnumerable<IResult> ShowTestResults()
         {
-            yield return Show.Tool<StatisticsViewModel>();
+            yield return Show.Document<StatisticsViewModel>();
         }
 
         private IEnumerable<IResult> ShowTraining()
@@ -81,7 +67,6 @@ namespace NeuralNetworkTestUI
 
         private IEnumerable<IResult> CreateNetwork()
         {
-            //yield return Show.Window<NetworkCreationDialogViewModel>();
             yield return Show.Window<NetworkCreationDialogViewModel>();
         }
     }

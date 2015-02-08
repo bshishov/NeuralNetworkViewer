@@ -23,7 +23,6 @@
             SelectedObject="{Binding Parameters}"
             Grid.Row="2" 
             Grid.ColumnSpan="2" 
-            ShowSummary="False" 
             ShowSortOptions="False" 
             ShowSearchBox="False" 
             ShowTitle="False">

@@ -39,7 +39,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConstructionParameters.cs" />
     <Compile Include="IConnection.cs" />
     <Compile Include="ILayer.cs" />
     <Compile Include="INeuralNetwork.cs" />
