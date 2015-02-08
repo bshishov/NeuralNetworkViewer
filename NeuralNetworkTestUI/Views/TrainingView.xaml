@@ -6,7 +6,7 @@
              xmlns:viewModels="clr-namespace:NeuralNetworkTestUI.ViewModels"
              xmlns:cal="http://www.caliburnproject.org"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" 
+             d:DesignHeight="300" d:DesignWidth="509" 
              d:DataContext="{d:DesignInstance Type=viewModels:CalculationViewModel, IsDesignTimeCreatable=True}"
              cal:Bind.AtDesignTime="True">
     <Grid Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
@@ -18,7 +18,9 @@
         <StackPanel Orientation="Horizontal">
             <Button Content="Train" Margin="2,2,2,2" Padding="8,0,8,0" Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" BorderBrush="{x:Null}" cal:Message.Attach="[Event Click] = [Action OnTrain($dataContext)]" ></Button>
             <Button Content="Test" Margin="2,2,2,2" Padding="8,0,8,0" Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" BorderBrush="{x:Null}" cal:Message.Attach="[Event Click] = [Action OnTest($dataContext)]" ></Button>
+            <Button Content="ExportImage" Margin="2,2,2,2" Padding="8,0,8,0" Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" BorderBrush="{x:Null}" cal:Message.Attach="[Event Click] = [Action OnExportImage($dataContext)]" ></Button>
             <Rectangle  Width="1" Margin="2,2,2,2" Height="26" Fill="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
+            <Button Content="From Image" Margin="2,2,2,2" Padding="8,0,8,0" cal:Message.Attach="[Event Click] = [Action OnFromImage($dataContext)]"></Button>
             <Button Content="Generate" Margin="2,2,2,2" Padding="8,0,8,0" cal:Message.Attach="[Event Click] = [Action OnGenerate($dataContext)]"></Button>
             <Button Content="Clear" Margin="2,2,2,2" Padding="8,0,8,0" cal:Message.Attach="[Event Click] = [Action OnClear($dataContext)]"></Button>
         </StackPanel>
@@ -33,7 +35,7 @@
             Background="White"/>
         <StackPanel Grid.Row="2" Orientation="Horizontal" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
             <CheckBox Content="Live preview" VerticalAlignment="Center" Margin="10,0,10,0" IsChecked="{Binding IsLiveUpdate}"></CheckBox>
-            <ProgressBar Width="100" Height="15" VerticalAlignment="Center"></ProgressBar>
+            <ProgressBar Width="150" Height="15" Value="{Binding Progress}" VerticalAlignment="Center"></ProgressBar>
         </StackPanel>
     </Grid>
 </UserControl>

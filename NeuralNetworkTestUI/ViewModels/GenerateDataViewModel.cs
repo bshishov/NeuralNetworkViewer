@@ -39,7 +39,8 @@ namespace NeuralNetworkTestUI.ViewModels
                 {
                     Name = "Input " + index++,
                     From = -10,
-                    To = 10
+                    To = 10,
+                    IsRandom = true
                 });
             }
 
@@ -124,6 +125,7 @@ namespace NeuralNetworkTestUI.ViewModels
         public string Name { get; set; }
         public double From { get; set; }
         public double To   { get; set; }
+        public bool   IsRandom { get; set; }
     }
 
     class OutputGenerationParameter

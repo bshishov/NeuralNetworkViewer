@@ -126,6 +126,7 @@
     <Compile Include="Messaging\NetworkUpdatedMessage.cs" />
     <Compile Include="MyAppBootstrapper.cs" />
     <Compile Include="Representation\Representation.cs" />
+    <Compile Include="Utilities\LockBitmap.cs" />
     <Compile Include="ViewModels\CalculationViewModel.cs" />
     <Compile Include="ViewModels\GenerateDataViewModel.cs" />
     <Compile Include="ViewModels\NetworkCreationDialogViewModel.cs" />

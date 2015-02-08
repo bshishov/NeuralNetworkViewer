@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Data;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Windows.Documents;
 using Caliburn.Micro;
@@ -12,8 +14,10 @@ using Gemini.Framework.Results;
 using Gemini.Framework.Services;
 using Gemini.Modules.Output;
 using Gemini.Modules.Shell.Views;
+using Microsoft.Win32;
 using NeuralNetworkLibBase;
 using NeuralNetworkTestUI.Messaging;
+using NeuralNetworkTestUI.Utilities;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
@@ -50,6 +54,17 @@ namespace NeuralNetworkTestUI.ViewModels
                 _network = value;
                 NotifyOfPropertyChange(() => Network);
                 Data = InitTable();
+            }
+        }
+
+        private double _progress;
+        public double Progress
+        {
+            get { return _progress; }
+            set
+            {
+                _progress = value;
+                NotifyOfPropertyChange(() => Progress);
             }
         }
 
@@ -108,10 +123,13 @@ namespace NeuralNetworkTestUI.ViewModels
             {
                 if(i % 100 == 0)
                     log.AppendLine(String.Format("Generating: {0}/{1}", i,samplesCount));
-                for (int j = 0; j < inp.Length; j++)
+                for (var j = 0; j < inp.Length; j++)
                 {
                     var param = inputs[j];
-                    inp[j] = param.From + random.NextDouble()*(param.To - param.From);
+                    if(param.IsRandom)
+                        inp[j] = param.From + random.NextDouble()*(param.To - param.From);
+                    else
+                        inp[j] = param.From + ((double)i / (double)samplesCount) * (param.To - param.From);
                 }
                 var row = new List<double>();
                 row.AddRange(inp);
@@ -140,8 +158,107 @@ namespace NeuralNetworkTestUI.ViewModels
             action.BeginInvoke(new AsyncCallback((res) => _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges))), this);
         }
 
+        public void OnFromImage(object context)
+        {
+            if (Network == null) return;
+
+            if (Network.InputLayer.Nodes.Count() != 2)
+                throw new Exception("Network inputs count should be exactly 2 (x,y)");
+
+            if (Network.OutputLayer.Nodes.Count() != 3)
+                throw new Exception("Network outputs count should be exactly 3 (R,G,B)");
+
+            var dt = InitTable();
+            var dialog = new OpenFileDialog { Filter = "All Files|*.*|Bitmap files (*.bmp)|*.bmp|JPEG Files (*.jpeg)|*.jpeg|PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif" };
+            if (dialog.ShowDialog() != true)
+                return;
+
+            var bmp = new Bitmap(dialog.FileName);
+            var locked = new LockBitmap(bmp);
+            locked.LockBits();
+            var inputs = new double[2]; // 2 inputs (x,y)
+            var outputs = new double[3]; // 3 outputs (r,g,b)
+
+            var random = new Random();
+            for (int i = 0; i < 10000; i++)
+            {
+                var x = random.NextDouble();
+                var y = random.NextDouble();
+                var color = locked.GetPixel((int) (x * bmp.Width), (int) (y * bmp.Width));
+                inputs[0] = x;
+                inputs[1] = y;
+                outputs[0] = (double)color.R / 255.0;
+                outputs[1] = (double)color.G / 255.0;
+                outputs[2] = (double)color.B / 255.0;
+
+                var row = new List<double>();
+                row.AddRange(inputs);
+                row.AddRange(outputs);
+                var r = dt.NewRow();
+                r.ItemArray = row.Select(item => (object)item).ToArray();
+                dt.Rows.Add(r);
+            }
+            /*
+            for (var i = 0; i < locked.Width; i++)
+                for (var j = 0; j < locked.Height; j++)
+                {
+                    var color = locked.GetPixel(i, j);
+                    inputs[0] = (double)i / (double)locked.Width;
+                    inputs[1] = (double)j / (double)locked.Height;
+                    outputs[0] = (double) color.R / 255.0;
+                    outputs[1] = (double) color.G / 255.0;
+                    outputs[2] = (double) color.B / 255.0;
+                    
+                    var row = new List<double>();
+                    row.AddRange(inputs);
+                    row.AddRange(outputs);
+                    var r = dt.NewRow();
+                    r.ItemArray = row.Select(item => (object)item).ToArray();
+                    dt.Rows.Add(r);
+                }*/
+            locked.UnlockBits();
+            Data = dt;
+        }
+
+        public void OnExportImage(object context)
+        {
+            if (Network == null) return;
+
+            if (Network.InputLayer.Nodes.Count() != 2)
+                throw new Exception("Network inputs count should be exactly 2 (x,y)");
+
+            if (Network.OutputLayer.Nodes.Count() != 3)
+                throw new Exception("Network outputs count should be exactly 3 (R,G,B)");
+
+            var dialog = new SaveFileDialog();
+            if (dialog.ShowDialog() != true)
+                return;
+
+            var margin = 10;
+            var width = 48;
+            var height = 48;
+            var bmp = new Bitmap(width + 2*margin, height + 2*margin);
+            var locked = new LockBitmap(bmp);
+            locked.LockBits();
+
+            for (var i = 0.0 - margin; i < width + margin; i += 1.0)
+            {
+                for (var j = 0.0 - margin; j < height + margin; j += 1.0)
+                {
+                    var x = i / (double)bmp.Width;
+                    var y = j / (double)bmp.Height;
+                    var result = _network.Calculate(new[] {x, y});
+                    var color = Color.FromArgb(255, (int) (result[0]*255), (int) (result[1]*255), (int) (result[2]*255));
+                    locked.SetPixel((int)i + margin, (int)j + margin, color);
+                }   
+            }
+            locked.UnlockBits();
+            bmp.Save(dialog.FileName);
+        }
+
         private void Train()
         {
+            Progress = 0;
             var inputs = new double[Network.InputLayer.Nodes.Count()];
             var outputs = new double[Network.OutputLayer.Nodes.Count()];
             var log = IoC.Get<IOutput>();
@@ -153,7 +270,8 @@ namespace NeuralNetworkTestUI.ViewModels
             {
                 if (index++%100 == 0)
                 {
-                    log.AppendLine(String.Format("Training {0}/{1}  ({2:F2}%)", index, total, index/total * 100));
+                    Progress = index/total*100;
+                    log.AppendLine(String.Format("Training {0}/{1}  ({2:F2}%)", index, total, Progress));
                     if(IsLiveUpdate)
                         _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
                 }

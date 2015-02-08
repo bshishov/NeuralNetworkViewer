@@ -29,11 +29,34 @@ namespace ShNeuralNetwork
             [Description("Function used to calculate weight of a connection")]
             public SquashingFunctions SquashingFunction { get; set; }
 
+            [Category("Detailed")]
+            [Description("Precision to evaluate the sample at training")]
+            public double Epsilon { get; set; }
+
+            [Category("Detailed")]
+            [Description("Approx. count of samples passed to training")]
+            public int Samples { get; set; }
+
+            [Category("Normalization")]
+            public double InputsFrom { get; set; }
+            [Category("Normalization")]
+            public double InputsTo { get; set; }
+            [Category("Normalization")]
+            public double OutputsFrom { get; set; }
+            [Category("Normalization")]
+            public double OutputsTo { get; set; }
+
             public ConstructionArgs()
             {
                 Inputs = 2;
-                Outputs = 1;
-                HiddenLayers = new ObservableCollection<int>(){4,4,4};
+                Outputs = 3;
+                InputsFrom = 0;
+                InputsTo = 1;
+                OutputsFrom = 0;
+                OutputsTo = 1;
+                Epsilon = 0.0001;
+                Samples = 10000;
+                HiddenLayers = new ObservableCollection<int>(){10,10,10};
                 SquashingFunction = SquashingFunctions.Sigmoid;
             }
         }
@@ -76,6 +99,8 @@ namespace ShNeuralNetwork
         private readonly List<Layer<Neuron>> _layers;
         private INormalization _inNorm;
         private INormalization _outNorm;
+        private double _precision;
+        private int _samples;
 
         public NeuralNetwork()
         {
@@ -90,9 +115,11 @@ namespace ShNeuralNetwork
                 throw new Exception("Arguments type mismatch") { Data = { { "Arguments", argsRaw } } };
 
             var random = new Random();
-            _inNorm = new LinearNormalization(-10, 10);
-            _outNorm = new LinearNormalization(-100,100);
+            _inNorm = new LinearNormalization(args.InputsFrom, args.InputsTo);
+            _outNorm = new LinearNormalization(args.OutputsFrom, args.OutputsTo);
             _squashingFunction = SquashingFunction.FromType(args.SquashingFunction);
+            _precision = args.Epsilon;
+            _samples = args.Samples;
 
             for (var i = 0; i < args.Inputs; i++)
             {
@@ -159,13 +186,14 @@ namespace ShNeuralNetwork
             
             var inputs = inputsRaw.Select(_inNorm.Normalize).ToArray();
             var expectedOutputs = expectedOutputsRaw.Select(_outNorm.Normalize).ToArray();
-            
-            const double precision = 0.00001;
-            var iterationError = precision + 0.1;
+
+            var iterationError = _precision + 0.1;
             var iterations = 0;
-            while (iterationError > precision)
+            while (iterationError > _precision)
             {
                 iterations++;
+                var speed = Math.Min(iterations/(double) _samples, 1);
+                speed = Math.Max(speed, 0.1);
                 var results = SingleProcess(inputs);
 
                 var errors = results.Select((t, index) => (expectedOutputs[index] - t)).ToList();
@@ -184,7 +212,7 @@ namespace ShNeuralNetwork
                     var layer = _layers[i];
                     foreach (var neuron in layer.Neurons)
                     {
-                        neuron.Step6_7(errorSumMap[neuron], _squashingFunction, 0.5);
+                        neuron.Step6_7(errorSumMap[neuron], _squashingFunction, speed);
                         foreach (var prev in neuron.IncomingLinks)
                         {
                             if (!errorSumMap.ContainsKey(prev.StartNeuron)) errorSumMap.Add(prev.StartNeuron, 0);

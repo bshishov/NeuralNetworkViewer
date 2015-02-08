@@ -22,7 +22,7 @@ namespace NeuralNetworkTestUI
         [Import] NetworkCreationDialogViewModel _networkCreationDialogViewModel;
 
         public override void Initialize()
-        {   
+        {
             var view = MainMenu.All.First(x => x.Name == "View");
             view.Add(new MenuItem("Output Viewer", OpenOutputViewer));
             view.Add(new MenuItem("Weight Viewer", OpenWeightViewer));

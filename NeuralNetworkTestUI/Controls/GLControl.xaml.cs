@@ -217,18 +217,12 @@ namespace NeuralNetworkTestUI.Controls
             var r = (int)(right / gridSize + 1);
             var t = (int)(top / gridSize);
             var b = (int)(bottom / gridSize + 1);
-            var axisColor = gridColor;
-            var lineColor = Color.FromArgb(
-                gridColor.A, 
-                gridColor.R + 10,
-                gridColor.G + 10,
-                gridColor.B + 10);
 
             for (var i = l; i < r; i++)
-                DrawingUtilities.DrawLine(new PointF(i * gridSize, top), new PointF(i * gridSize, bottom), i == 0 ? axisColor : lineColor);
+                DrawingUtilities.DrawLine(new PointF(i * gridSize, top), new PointF(i * gridSize, bottom), gridColor);
 
             for (var i = t; i < b; i++)
-                DrawingUtilities.DrawLine(new PointF(left, i * gridSize), new PointF(right, i * gridSize), i == 0 ? axisColor : lineColor);
+                DrawingUtilities.DrawLine(new PointF(left, i * gridSize), new PointF(right, i * gridSize), gridColor);
         }
         
     }

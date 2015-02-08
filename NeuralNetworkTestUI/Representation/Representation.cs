@@ -96,7 +96,7 @@ namespace NeuralNetworkTestUI.Representation
             _links = new List<LinkRepresentation>();
             _network = network;
 
-            var horizontalMargin = 200f;
+            var horizontalMargin = 100f;
             var verticalMargin = 50f;
             var horizontalOffset = 0f;
             var verticalOffset = 0f;
@@ -116,11 +116,12 @@ namespace NeuralNetworkTestUI.Representation
             foreach (var layer in network.HiddenLayers)
             {
                 verticalOffset = -(layer.Nodes.Count() * verticalMargin) / 2f;
+                var layerOffset = layer.Nodes.Count()*30;
                 foreach (var neuron in layer.Nodes)
                 {
                     _neurons.Add(new NeuronRepresentation(neuron, NeuronType.Hidden)
                     {
-                        Position = new PointF(horizontalOffset, verticalOffset)
+                        Position = new PointF(horizontalOffset + layerOffset / 2f, verticalOffset)
                     });
                     verticalOffset += verticalMargin;
                     if(neuron.Incoming == null)
@@ -134,7 +135,7 @@ namespace NeuralNetworkTestUI.Representation
                         });    
                     }
                 }
-                horizontalOffset += horizontalMargin;
+                horizontalOffset += layerOffset;
             }
 
             verticalOffset = -(_network.OutputLayer.Nodes.Count() * verticalMargin) / 2f;
@@ -142,7 +143,7 @@ namespace NeuralNetworkTestUI.Representation
             {
                 _neurons.Add(new NeuronRepresentation(neuron, NeuronType.Output)
                 {
-                    Position = new PointF(horizontalOffset, verticalOffset)
+                    Position = new PointF(horizontalOffset + horizontalMargin, verticalOffset)
                 });
                 verticalOffset += verticalMargin;
                 if (neuron.Incoming == null)

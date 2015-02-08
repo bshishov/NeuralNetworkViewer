@@ -5,6 +5,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Caliburn.Micro;
 using Gemini.Framework;
@@ -64,6 +65,9 @@ namespace NeuralNetworkTestUI.ViewModels
             //Fill the imports of this object
             container.ComposeParts(this);
             _networksAvailable = new ObservableCollection<INeuralNetwork>(_networkTypes);
+
+            // Select first item
+            SelectedNetwork = NetworksAvailable.First();
         }
 
         public Object Parameters
