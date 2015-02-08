@@ -36,7 +36,7 @@ namespace ShNeuralNetwork
                         (x) => x <= 0 ? 0 : x >= 1 ? 0 : 1
                         );
                 default:
-                    throw new Exception("Wrong type passed");
+                    throw new Exception("Wrong type passed") {Data = {{"Passed type", type}}};
             }
         }
     }

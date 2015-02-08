@@ -11,24 +11,37 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
-            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="10" />
-            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Label Content="Neural network" Width="auto"/>
-        <ComboBox  Width="auto" Grid.Column="1" ItemsSource="{Binding NetworksAvailable}" SelectedItem="{Binding SelectedNetwork}" VerticalContentAlignment="Center" SelectedIndex="0"/>
+        <ComboBox  Width="auto" Grid.Column="1" ItemsSource="{Binding NetworksAvailable}" SelectedItem="{Binding SelectedNetwork}" VerticalContentAlignment="Center" SelectedIndex="0">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        
+        <Label Grid.Column="0" Grid.Row="1" Content="Description" />
+        <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding SelectedNetwork.Description}" TextWrapping="Wrap" Margin="5,5,0,0"/>
+        
+        <Label Grid.Column="0" Grid.Row="2" Content="Author" />
+        <Label Grid.Column="1" Grid.Row="2" Content="{Binding SelectedNetwork.Author}" />
         
         <xctk:PropertyGrid 
+            Margin="0,5,0,0"
             SelectedObject="{Binding Parameters}"
-            Grid.Row="2" 
+            Grid.Row="3" 
             Grid.ColumnSpan="2" 
             ShowSortOptions="False" 
             ShowSearchBox="False" 
             ShowTitle="False">
         </xctk:PropertyGrid>
         
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1" Margin="0,5,0,0">
             <Button Content="Ok" Width="75" Margin="0,0,10,0" cal:Message.Attach="[Event Click] = [Action OnOk($dataContext)]"/>
             <Button Content="Cancel" Width="75" cal:Message.Attach="[Event Click] = [Action OnCancel($dataContext)]"/>
         </StackPanel>

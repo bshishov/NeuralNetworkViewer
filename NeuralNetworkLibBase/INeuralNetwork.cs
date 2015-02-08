@@ -5,6 +5,10 @@ namespace NeuralNetworkLibBase
 {
     public interface INeuralNetwork
     {
+        string Name { get; }
+        string Description { get; }
+        string Author { get; }
+
         ILayer InputLayer { get; }
         ILayer OutputLayer { get; }
         Type ArgsType { get; }

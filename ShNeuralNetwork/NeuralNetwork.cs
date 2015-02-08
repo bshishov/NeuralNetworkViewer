@@ -38,22 +38,22 @@ namespace ShNeuralNetwork
             }
         }
 
+        public string Name { get { return "Kohonen network implementation"; } }
+        public string Author { get { return "Shishov Boris"; } }
+        public string Description { get { return "Basic Kohonen network implementation. Basic Kohonen network implementation. Basic Kohonen network implementation. Basic Kohonen network implementation. "; } }
         public ILayer InputLayer
         {
             get { return _inputs; }  
         }
-
         public ILayer OutputLayer
         {
             get { return _layers.Last(); }
         }
-
         public IEnumerable<ILayer> HiddenLayers
         {
             get { return _layers.Take(_layers.Count - 1); }
             
         }
-
         public IEnumerable<IConnection> Connections
         {
             get
@@ -69,7 +69,6 @@ namespace ShNeuralNetwork
                 return list;
             }
         }
-
         public Type ArgsType { get { return typeof (ConstructionArgs); } }
 
         private readonly Layer<Input> _inputs;
@@ -88,7 +87,7 @@ namespace ShNeuralNetwork
         {
             var args = argsRaw as ConstructionArgs;
             if(args == null)
-                throw new Exception("Wrong arguments");
+                throw new Exception("Arguments type mismatch") { Data = { { "Arguments", argsRaw } } };
 
             var random = new Random();
             _inNorm = new LinearNormalization(-10, 10);
