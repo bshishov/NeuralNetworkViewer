@@ -6,6 +6,8 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Documents;
 using Caliburn.Micro;
 using ExpressionEvaluator;
@@ -80,6 +82,20 @@ namespace NeuralNetworkTestUI.ViewModels
                 NotifyOfPropertyChange(() => IsLiveUpdate);
             }
         }
+
+        private PlotModel _errorPlot;
+        public PlotModel ErrorPlot
+        {
+            get { return _errorPlot; }
+            set
+            {
+                _errorPlot = value;
+                NotifyOfPropertyChange(() => ErrorPlot);
+            }
+        }
+
+        private CancellationTokenSource _cancellationTokenSource;
+        private bool _training = false;
         
         [ImportingConstructor]
         public TrainingViewModel(IEventAggregator events)
@@ -154,8 +170,20 @@ namespace NeuralNetworkTestUI.ViewModels
         public void OnTrain(object context)
         {
             if (Network == null) return;
-            var action = new System.Action(Train);
-            action.BeginInvoke(new AsyncCallback((res) => _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges))), this);
+            
+            if (!_training)
+            {
+                _cancellationTokenSource = new CancellationTokenSource();
+                _training = true;
+                var token = _cancellationTokenSource.Token;    
+                Task.Factory.StartNew(() => Train(token), token).
+                    ContinueWith((res) => _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges)));
+            }
+            else
+            {
+                _cancellationTokenSource.Cancel();
+                _training = false;
+            }
         }
 
         public void OnFromImage(object context)
@@ -165,8 +193,8 @@ namespace NeuralNetworkTestUI.ViewModels
             if (Network.InputLayer.Nodes.Count() != 2)
                 throw new Exception("Network inputs count should be exactly 2 (x,y)");
 
-            if (Network.OutputLayer.Nodes.Count() != 3)
-                throw new Exception("Network outputs count should be exactly 3 (R,G,B)");
+            //if (Network.OutputLayer.Nodes.Count() != 3)
+              //  throw new Exception("Network outputs count should be exactly 3 (R,G,B)");
 
             var dt = InitTable();
             var dialog = new OpenFileDialog { Filter = "All Files|*.*|Bitmap files (*.bmp)|*.bmp|JPEG Files (*.jpeg)|*.jpeg|PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|GIF Files (*.gif)|*.gif" };
@@ -180,16 +208,17 @@ namespace NeuralNetworkTestUI.ViewModels
             var outputs = new double[3]; // 3 outputs (r,g,b)
 
             var random = new Random();
+            
             for (int i = 0; i < 10000; i++)
             {
                 var x = random.NextDouble();
                 var y = random.NextDouble();
-                var color = locked.GetPixel((int) (x * bmp.Width), (int) (y * bmp.Width));
-                inputs[0] = x;
-                inputs[1] = y;
-                outputs[0] = (double)color.R / 255.0;
-                outputs[1] = (double)color.G / 255.0;
-                outputs[2] = (double)color.B / 255.0;
+                var color = locked.GetPixel((int)(x * bmp.Width), (int)(y * bmp.Height));
+                inputs[0] = x * 2.0 - 1.0;
+                inputs[1] = y * 2.0 - 1.0;
+                outputs[0] = (double)(color.R + color.G + color.B) / 3.0;
+                outputs[1] = (double)color.G;
+                outputs[2] = (double)color.B;
 
                 var row = new List<double>();
                 row.AddRange(inputs);
@@ -215,7 +244,8 @@ namespace NeuralNetworkTestUI.ViewModels
                     var r = dt.NewRow();
                     r.ItemArray = row.Select(item => (object)item).ToArray();
                     dt.Rows.Add(r);
-                }*/
+                }
+             */
             locked.UnlockBits();
             Data = dt;
         }
@@ -227,38 +257,61 @@ namespace NeuralNetworkTestUI.ViewModels
             if (Network.InputLayer.Nodes.Count() != 2)
                 throw new Exception("Network inputs count should be exactly 2 (x,y)");
 
-            if (Network.OutputLayer.Nodes.Count() != 3)
-                throw new Exception("Network outputs count should be exactly 3 (R,G,B)");
+            //if (Network.OutputLayer.Nodes.Count() != 3)
+                //throw new Exception("Network outputs count should be exactly 3 (R,G,B)");
 
             var dialog = new SaveFileDialog();
             if (dialog.ShowDialog() != true)
                 return;
-
-            var margin = 10;
-            var width = 48;
-            var height = 48;
-            var bmp = new Bitmap(width + 2*margin, height + 2*margin);
+            
+            var width = 256;
+            var height = 256;
+            var bmp = new Bitmap(width, height);
             var locked = new LockBitmap(bmp);
             locked.LockBits();
 
-            for (var i = 0.0 - margin; i < width + margin; i += 1.0)
+            for (var i = 0 ; i < width; i ++)
+            for (var j = 0 ; j < height; j ++)
             {
-                for (var j = 0.0 - margin; j < height + margin; j += 1.0)
-                {
-                    var x = i / (double)bmp.Width;
-                    var y = j / (double)bmp.Height;
-                    var result = _network.Calculate(new[] {x, y});
-                    var color = Color.FromArgb(255, (int) (result[0]*255), (int) (result[1]*255), (int) (result[2]*255));
-                    locked.SetPixel((int)i + margin, (int)j + margin, color);
-                }   
-            }
+                var x = (i / (double)bmp.Width) * 2.0 - 1.0;
+                var y = (j / (double)bmp.Height) * 2.0 - 1.0;
+                var result = _network.Calculate(new[] { (double)x, (double)y });
+                var color = Color.FromArgb(255, 
+                    (int)Clamp(result[0],0,255),
+                    (int)Clamp(result[1],0,255),
+                    (int)Clamp(result[2],0,255));
+                locked.SetPixel((int)i, (int)j, color); 
+            }   
+            
             locked.UnlockBits();
             bmp.Save(dialog.FileName);
         }
 
-        private void Train()
+        private static double Clamp(double val, double min, double max)
+        {
+            return Math.Min(max, Math.Max(val, min));
+        }
+
+        private void Train(CancellationToken token)
         {
             Progress = 0;
+            var model = new PlotModel();
+            model.Axes.Add(new LinearAxis()
+            {
+                Maximum = 1.0,
+                Minimum = 0.0,
+                AbsoluteMinimum = 0.0
+            });
+            model.Axes.Add(new LinearAxis()
+            {
+                Position = AxisPosition.Bottom,
+                IsAxisVisible = false,
+
+            });
+            var series = new LineSeries() { Title = "Error"};
+            model.Series.Add(series);
+            ErrorPlot = model;
+
             var inputs = new double[Network.InputLayer.Nodes.Count()];
             var outputs = new double[Network.OutputLayer.Nodes.Count()];
             var log = IoC.Get<IOutput>();
@@ -268,12 +321,17 @@ namespace NeuralNetworkTestUI.ViewModels
             var total = (double)rows.Count;
             foreach (var row in rows)
             {
+                if(token.IsCancellationRequested)
+                    break;
                 if (index++%100 == 0)
                 {
                     Progress = index/total*100;
                     log.AppendLine(String.Format("Training {0}/{1}  ({2:F2}%)", index, total, Progress));
-                    if(IsLiveUpdate)
+                    if (IsLiveUpdate)
+                    {
                         _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
+                        NotifyOfPropertyChange(() => ErrorPlot);
+                    }
                 }
 
                 var rowData = row.ItemArray;
@@ -281,8 +339,10 @@ namespace NeuralNetworkTestUI.ViewModels
                     inputs[i] = Convert.ToDouble(rowData[i]);
                 for (var i = 0; i < outputs.Length; i++)
                     outputs[i] = Convert.ToDouble(rowData[i + inputs.Length]);
-                _network.Train(inputs, outputs);
+                var error = _network.Train(inputs, outputs);
+                series.Points.Add(new DataPoint(index,error));
             }
+            Progress = 100;
             log.AppendLine("Training completed");
         }
 
@@ -344,14 +404,14 @@ namespace NeuralNetworkTestUI.ViewModels
         private DataTable InitTable()
         {
             var dt = new DataTable();
-            if (Network != null)
-            {
-                var index = 0;
-                foreach (var node in Network.InputLayer.Nodes)
-                    dt.Columns.Add(new DataColumn("Input " + index++));
-                foreach (var node in Network.OutputLayer.Nodes)
-                    dt.Columns.Add(new DataColumn("Output " + index++));
-            }
+            if (Network == null) return dt;
+
+            var index = 0;
+            foreach (var node in Network.InputLayer.Nodes)
+                dt.Columns.Add(new DataColumn("Input " + index++));
+            index = 0;
+            foreach (var node in Network.OutputLayer.Nodes)
+                dt.Columns.Add(new DataColumn("Output " + index++));
             return dt;
         }
     }

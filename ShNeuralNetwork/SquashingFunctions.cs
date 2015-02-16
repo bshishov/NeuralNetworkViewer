@@ -5,7 +5,11 @@ namespace ShNeuralNetwork
     public enum SquashingFunctions
     {
         Sigmoid,
+        SigmoidCentered,
         BipolarSigmoid,
-        Linear
+        Linear,
+        BipolarLinear,
+        BipolarArcusTangent,
+        Cauchy
     }
 }

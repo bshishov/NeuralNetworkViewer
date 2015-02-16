@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Windows;
+﻿using System.ComponentModel.Composition;
 using Caliburn.Micro;
 using Gemini.Framework;
-using Gemini.Modules.Output;
+using Gemini.Framework.Services;
 using NeuralNetworkLibBase;
 using NeuralNetworkTestUI.Messaging;
 using NeuralNetworkTestUI.Views;
@@ -20,8 +17,6 @@ namespace NeuralNetworkTestUI.ViewModels
         }
 
         private INeuralNetwork _network;
-        private readonly IOutput _output;
-        private IEventAggregator _events;
 
         public INeuralNetwork Network
         {
@@ -30,22 +25,24 @@ namespace NeuralNetworkTestUI.ViewModels
             {
                 _network = value;
                 NotifyOfPropertyChange(()=>Network);
-                _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.NewNetwork));
             }
         }
 
         [ImportingConstructor]
         public NeuralNetworkViewModel(IEventAggregator events)
         {
-            _events = events;
-            _events.Subscribe(this);
-            _output = IoC.Get<IOutput>();
+            events.Subscribe(this);
         }
 
         public void Handle(NetworkUpdatedMessage message)
         {
-            if(message.UpdateType == NetworkUpdateType.SmallChanges)
-                ((NeuralNetworkView) GetView()).Refresh();
+            if (message.UpdateType == NetworkUpdateType.NewNetwork)
+                Network = message.Network;
+            var view = GetView() as NeuralNetworkView;
+            if(view == null)
+                IoC.Get<IShell>().OpenDocument(this);
+            else
+                view.Refresh();
         }
     }
 }

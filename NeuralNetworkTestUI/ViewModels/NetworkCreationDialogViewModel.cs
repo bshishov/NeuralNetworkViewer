@@ -2,43 +2,43 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using Caliburn.Micro;
 using Gemini.Framework;
-using Gemini.Framework.Services;
 using NeuralNetworkLibBase;
-using NeuralNetworkTestUI.Messaging;
+using NeuralNetworkTestUI.Services;
 using NeuralNetworkTestUI.Views;
 
 namespace NeuralNetworkTestUI.ViewModels
 {
-    [Export(typeof(NetworkCreationDialogViewModel))]
-    class NetworkCreationDialogViewModel : WindowBase
+    [Export(typeof (NetworkCreationDialogViewModel))]
+    internal class NetworkCreationDialogViewModel : WindowBase, IPartImportsSatisfiedNotification
     {
-        private readonly IEventAggregator _events;
+        [Import] private INetworkService _networkService;
+
+        [ImportMany(typeof(INetworkDescription))]
+        private IEnumerable<INetworkDescription> _networkTypes;
+
+        private ObservableCollection<INetworkDescription> _networksAvailable;
         private Object _parameters;
 
-        [ImportMany(typeof(INeuralNetwork))]
-        private IEnumerable<INeuralNetwork> _networkTypes;
+        private INetworkDescription _selectedNetwork;
 
-        private ObservableCollection<INeuralNetwork> _networksAvailable;
-        public ObservableCollection<INeuralNetwork> NetworksAvailable
+        public NetworkCreationDialogViewModel()
+        {
+            DisplayName = "Network creation";
+        }
+
+        public ObservableCollection<INetworkDescription> NetworksAvailable
         {
             get { return _networksAvailable; }
             set
             {
                 _networksAvailable = value;
-                NotifyOfPropertyChange(()=>NetworksAvailable);
+                NotifyOfPropertyChange(() => NetworksAvailable);
             }
         }
 
-        private INeuralNetwork _selectedNetwork;
-
-        public INeuralNetwork SelectedNetwork
+        public INetworkDescription SelectedNetwork
         {
             get { return _selectedNetwork; }
             set
@@ -49,67 +49,34 @@ namespace NeuralNetworkTestUI.ViewModels
             }
         }
 
-        public void DoImport()
-        {
-            //An aggregate catalog that combines multiple catalogs
-            var catalog = new AggregateCatalog();
-
-            var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Plugins";
-            //Adds all the parts found in all assemblies in 
-            //the same directory as the executing program
-            catalog.Catalogs.Add(new DirectoryCatalog(path));
-
-            //Create the CompositionContainer with the parts in the catalog
-            CompositionContainer container = new CompositionContainer(catalog);
-
-            //Fill the imports of this object
-            container.ComposeParts(this);
-            _networksAvailable = new ObservableCollection<INeuralNetwork>(_networkTypes);
-
-            // Select first item
-            SelectedNetwork = NetworksAvailable.First();
-        }
-
         public Object Parameters
         {
             get { return _parameters; }
             set
             {
                 _parameters = value;
-                NotifyOfPropertyChange(()=>Parameters);
+                NotifyOfPropertyChange(() => Parameters);
             }
-        }
-
-        public NetworkCreationDialogViewModel()
-        {
-            DoImport();
-            if(_networkTypes != null)
-                Debug.WriteLine(string.Join(", ",_networkTypes));
-        }
-
-        [ImportingConstructor]
-        public NetworkCreationDialogViewModel(IEventAggregator eventAggregator) : this()
-        {
-            _events = eventAggregator;
-            DisplayName = "Network creation";
         }
 
         public void OnOk(Object context)
         {
-            SelectedNetwork.Create(Parameters);
-            var vm = IoC.Get<NeuralNetworkViewModel>();
-            vm.Network = SelectedNetwork;
-            IoC.Get<IShell>().OpenDocument(vm);
-            
-            _events.Publish(new NetworkUpdatedMessage(SelectedNetwork, NetworkUpdateType.NewNetwork));
-            var view = (NetworkCreationDialogView) this.GetView();
+            bool result = _networkService.Create(SelectedNetwork, Parameters);
+            if (!result) return;
+            var view = (NetworkCreationDialogView) GetView();
             view.Close();
         }
 
         public void OnCancel(Object context)
         {
-            var view = (NetworkCreationDialogView)this.GetView();
+            var view = (NetworkCreationDialogView) GetView();
             view.Close();
+        }
+
+        public void OnImportsSatisfied()
+        {
+            _networksAvailable = new ObservableCollection<INetworkDescription>(_networkTypes);
+            SelectedNetwork = NetworksAvailable.First();
         }
     }
 }

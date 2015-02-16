@@ -55,6 +55,9 @@
     <Reference Include="Gemini.Modules.PropertyGrid">
       <HintPath>..\packages\Gemini.Modules.PropertyGrid.0.5.0\lib\net40\Gemini.Modules.PropertyGrid.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Lyncee.OpenTK.1.1.1173.43181\lib\OpenTK.dll</HintPath>
@@ -126,9 +129,12 @@
     <Compile Include="Messaging\NetworkUpdatedMessage.cs" />
     <Compile Include="MyAppBootstrapper.cs" />
     <Compile Include="Representation\Representation.cs" />
+    <Compile Include="Services\INetworkService.cs" />
+    <Compile Include="Services\NetworkService.cs" />
     <Compile Include="Utilities\LockBitmap.cs" />
     <Compile Include="ViewModels\CalculationViewModel.cs" />
     <Compile Include="ViewModels\GenerateDataViewModel.cs" />
+    <Compile Include="ViewModels\ImageOutputViewModel.cs" />
     <Compile Include="ViewModels\NetworkCreationDialogViewModel.cs" />
     <Compile Include="ViewModels\OutputViewerViewModel.cs" />
     <Compile Include="ViewModels\StatisticsViewModel.cs" />
@@ -139,6 +145,9 @@
     </Compile>
     <Compile Include="Views\GenerateDataView.xaml.cs">
       <DependentUpon>GenerateDataView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ImageOutputView.xaml.cs">
+      <DependentUpon>ImageOutputView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\NetworkCreationDialogView.xaml.cs">
       <DependentUpon>NetworkCreationDialogView.xaml</DependentUpon>
@@ -204,6 +213,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\GenerateDataView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ImageOutputView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

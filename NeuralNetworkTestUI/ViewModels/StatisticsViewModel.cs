@@ -210,7 +210,7 @@ namespace NeuralNetworkTestUI.ViewModels
                 //Title = SelectedValue.Name,
                 HighColor = OxyColors.Gray,
                 LowColor = OxyColors.Black,
-                Maximum = 1,
+                Maximum = SelectedValue.Values.Max(),
                 Minimum = 0,
                 Position = AxisPosition.Right,
                 IsZoomEnabled = false,

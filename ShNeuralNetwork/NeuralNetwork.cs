@@ -8,10 +8,24 @@ using System.ComponentModel.Composition;
 
 namespace ShNeuralNetwork
 {
-    [Export(typeof(INeuralNetwork))]
+
+    [Export(typeof(INetworkDescription))]
+    public class NetworkDescription : INetworkDescription
+    {
+        public string Name { get { return "Rosenblatt perceptron network"; } }
+        public string Author { get { return "Shishov Boris"; } }
+        public string Description { get { return "Basic Rosenblatt perceptron network implementation."; } }
+        public Type ArgsType { get { return typeof(NeuralNetwork.ConstructionArgs); } }
+
+        public INeuralNetwork Create(object args)
+        {
+            return new NeuralNetwork(args as NeuralNetwork.ConstructionArgs);
+        }
+    }
+
     public class NeuralNetwork : INeuralNetwork
     {
-        class ConstructionArgs
+        public class ConstructionArgs
         {
             [Category("Basic")]
             [Description("Number of inputs of network")]
@@ -37,6 +51,12 @@ namespace ShNeuralNetwork
             [Description("Approx. count of samples passed to training")]
             public int Samples { get; set; }
 
+            [Category("Detailed")]
+            public double SpeedFrom { get; set; }
+
+            [Category("Detailed")]
+            public double SpeedTo { get; set; }
+
             [Category("Normalization")]
             public double InputsFrom { get; set; }
             [Category("Normalization")]
@@ -50,20 +70,19 @@ namespace ShNeuralNetwork
             {
                 Inputs = 2;
                 Outputs = 3;
-                InputsFrom = 0;
+                InputsFrom = -1;
                 InputsTo = 1;
                 OutputsFrom = 0;
-                OutputsTo = 1;
+                OutputsTo = 255;
                 Epsilon = 0.0001;
                 Samples = 10000;
-                HiddenLayers = new ObservableCollection<int>(){10,10,10};
-                SquashingFunction = SquashingFunctions.Sigmoid;
+                SpeedFrom = 0.5;
+                SpeedTo = 0.01;
+                HiddenLayers = new ObservableCollection<int>() { 10, 10, 10, 10 };
+                SquashingFunction = SquashingFunctions.BipolarSigmoid;
             }
         }
-
-        public string Name { get { return "Kohonen network implementation"; } }
-        public string Author { get { return "Shishov Boris"; } }
-        public string Description { get { return "Basic Kohonen network implementation. Basic Kohonen network implementation. Basic Kohonen network implementation. Basic Kohonen network implementation. "; } }
+        
         public ILayer InputLayer
         {
             get { return _inputs; }  
@@ -92,34 +111,28 @@ namespace ShNeuralNetwork
                 return list;
             }
         }
-        public Type ArgsType { get { return typeof (ConstructionArgs); } }
 
         private readonly Layer<Input> _inputs;
         private SquashingFunction _squashingFunction;
         private readonly List<Layer<Neuron>> _layers;
         private INormalization _inNorm;
         private INormalization _outNorm;
-        private double _precision;
-        private int _samples;
+        private int _iterations = 0;
+        private ConstructionArgs _args;
 
-        public NeuralNetwork()
+        public NeuralNetwork(ConstructionArgs args)
         {
             _inputs = new Layer<Input>();
             _layers = new List<Layer<Neuron>>();
-        }
-
-        public void Create(object argsRaw)
-        {
-            var args = argsRaw as ConstructionArgs;
+            
             if(args == null)
-                throw new Exception("Arguments type mismatch") { Data = { { "Arguments", argsRaw } } };
+                throw new Exception("Arguments type mismatch") { Data = { { "Arguments", args } } };
 
             var random = new Random();
-            _inNorm = new LinearNormalization(args.InputsFrom, args.InputsTo);
-            _outNorm = new LinearNormalization(args.OutputsFrom, args.OutputsTo);
+            _args = args;
+            _inNorm = new LinearNormalization(args.InputsFrom, args.InputsTo, -1, 1);
+            _outNorm = new LinearNormalization(args.OutputsFrom, args.OutputsTo, -1, 1);
             _squashingFunction = SquashingFunction.FromType(args.SquashingFunction);
-            _precision = args.Epsilon;
-            _samples = args.Samples;
 
             for (var i = 0; i < args.Inputs; i++)
             {
@@ -138,7 +151,7 @@ namespace ShNeuralNetwork
                         incoming = _inputs.Neurons.Select(n => new Link()
                         {
                             StartNeuron = n,
-                            Weight = random.NextDouble() - 0.5
+                            Weight = (random.NextDouble() - 0.5)
                         });
                     }
                     else
@@ -146,7 +159,7 @@ namespace ShNeuralNetwork
                         incoming = _layers[index - 1].Neurons.Select(n => new Link()
                         {
                             StartNeuron = n,
-                            Weight = random.NextDouble() - 0.5
+                            Weight = (random.NextDouble() - 0.5)
                         });
                     }
                     layer.Neurons.Add(new Neuron(incoming.ToArray()));
@@ -178,7 +191,7 @@ namespace ShNeuralNetwork
             return _layers.Last().Neurons.Select(n => n.Output).ToArray();
         }
 
-        public void Train(double[] inputsRaw, double[] expectedOutputsRaw)
+        public double Train(double[] inputsRaw, double[] expectedOutputsRaw)
         {
             var outputLayer = _layers.Last();
             if (inputsRaw.Length != _inputs.Neurons.Count) throw new Exception("Not enough inputs");
@@ -186,14 +199,17 @@ namespace ShNeuralNetwork
             
             var inputs = inputsRaw.Select(_inNorm.Normalize).ToArray();
             var expectedOutputs = expectedOutputsRaw.Select(_outNorm.Normalize).ToArray();
+           
+            var iterationError = _args.Epsilon + 0.1;
+            var totalError = 0.0;
+            var localIterations = 0.0;
 
-            var iterationError = _precision + 0.1;
-            var iterations = 0;
-            while (iterationError > _precision)
+            while (iterationError > _args.Epsilon)
             {
-                iterations++;
-                var speed = Math.Min(iterations/(double) _samples, 1);
-                speed = Math.Max(speed, 0.1);
+                localIterations++;
+                if (_iterations < _args.Samples)
+                    _iterations++;
+                var speed = Clamp(_args.SpeedFrom - (_iterations / (double)_args.Samples) * (_args.SpeedFrom - _args.SpeedTo), _args.SpeedTo, _args.SpeedFrom);
                 var results = SingleProcess(inputs);
 
                 var errors = results.Select((t, index) => (expectedOutputs[index] - t)).ToList();
@@ -230,14 +246,25 @@ namespace ShNeuralNetwork
                 }
 
                 results = SingleProcess(inputs);
-                iterationError = 0.5 * results.Select((t, index) => (t - expectedOutputs[index]) * (t - expectedOutputs[index])).Sum();
+
+                // Mean squared error
+                iterationError = results.Select((t, index) => (t - expectedOutputs[index]) * (t - expectedOutputs[index])).Sum();
+                if (localIterations <= 1)
+                    totalError = iterationError;
             }
-            //Console.WriteLine("Iterations spent: {0}", iterations);
+
+            // RMSE
+            return totalError;
         }
 
         public List<double> Calculate(double[] inputs)
         {
             return SingleProcess(inputs.Select(_inNorm.Normalize).ToArray()).Select(_outNorm.Denormalize).ToList();
+        }
+
+        private static double Clamp(double val, double min, double max)
+        {
+            return Math.Min(max, Math.Max(val, min));
         }
     }
 }

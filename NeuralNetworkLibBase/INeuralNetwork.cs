@@ -3,21 +3,25 @@ using System.Collections.Generic;
 
 namespace NeuralNetworkLibBase
 {
-    public interface INeuralNetwork
+    public interface INetworkDescription
     {
         string Name { get; }
         string Description { get; }
         string Author { get; }
+        Type ArgsType { get; }
+        INeuralNetwork Create(object args);
+    }
 
+    public interface INeuralNetwork
+    {
         ILayer InputLayer { get; }
         ILayer OutputLayer { get; }
-        Type ArgsType { get; }
+        
 
         IEnumerable<ILayer> HiddenLayers { get; }
         IEnumerable<IConnection> Connections { get; }
-
-        void Create(object args);
-        void Train(double[] inputs, double[] outputs);
+        
+        double Train(double[] inputs, double[] outputs);
         List<double> Calculate(double[] inputs);
     }
 }

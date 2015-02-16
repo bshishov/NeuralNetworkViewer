@@ -5,15 +5,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:NeuralNetworkTestUI.ViewModels"
              xmlns:cal="http://www.caliburnproject.org"
-             mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="509" 
+             xmlns:oxy="http://oxyplot.org/wpf"
+             mc:Ignorable="d" d:DesignWidth="447" 
              d:DataContext="{d:DesignInstance Type=viewModels:CalculationViewModel, IsDesignTimeCreatable=True}"
              cal:Bind.AtDesignTime="True">
     <Grid Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="25"/>
+            <RowDefinition Height="5"/>
+            <RowDefinition Height="150"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
             <Button Content="Train" Margin="2,2,2,2" Padding="8,0,8,0" Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" Foreground="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" BorderBrush="{x:Null}" cal:Message.Attach="[Event Click] = [Action OnTrain($dataContext)]" ></Button>
@@ -33,7 +35,9 @@
             HorizontalGridLinesBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
             ItemsSource="{Binding Data}"
             Background="White"/>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+        <GridSplitter Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="5"></GridSplitter>
+        <oxy:PlotView Margin="0,5,0,0" Grid.Row="3" Model="{Binding ErrorPlot}" HorizontalAlignment="Stretch"></oxy:PlotView>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Height="25">
             <CheckBox Content="Live preview" VerticalAlignment="Center" Margin="10,0,10,0" IsChecked="{Binding IsLiveUpdate}"></CheckBox>
             <ProgressBar Width="150" Height="15" Value="{Binding Progress}" VerticalAlignment="Center"></ProgressBar>
         </StackPanel>
