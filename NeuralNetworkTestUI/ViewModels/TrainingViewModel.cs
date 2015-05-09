@@ -14,7 +14,6 @@ using ExpressionEvaluator;
 using Gemini.Framework;
 using Gemini.Framework.Results;
 using Gemini.Framework.Services;
-using Gemini.Modules.Output;
 using Gemini.Modules.Shell.Views;
 using Microsoft.Win32;
 using NeuralNetworkLibBase;
@@ -72,6 +71,7 @@ namespace NeuralNetworkTestUI.ViewModels
 
         private bool _isLiveUpdate;
         private IEventAggregator _events;
+        private readonly ILog _log = LogManager.GetLog(typeof(TrainingViewModel));
 
         public bool IsLiveUpdate
         {
@@ -121,11 +121,10 @@ namespace NeuralNetworkTestUI.ViewModels
             var inputs = message.Inputs;
             var outputs = message.Outputs;
             var samplesCount = message.SamplesCount;
-            var log = IoC.Get<IOutput>();
             var random = new Random();
             var dt = InitTable();
 
-            log.AppendLine("Generating initiated");
+            _log.Info("Generating initiated");
             
             var registry = new TypeRegistry();
             registry.RegisterType("Math", typeof(Math));
@@ -138,7 +137,7 @@ namespace NeuralNetworkTestUI.ViewModels
             for (var i = 0; i < samplesCount; i++)
             {
                 if(i % 100 == 0)
-                    log.AppendLine(String.Format("Generating: {0}/{1}", i,samplesCount));
+                    _log.Info("Generating: {0}/{1}", i,samplesCount);
                 for (var j = 0; j < inp.Length; j++)
                 {
                     var param = inputs[j];
@@ -177,7 +176,7 @@ namespace NeuralNetworkTestUI.ViewModels
                 _training = true;
                 var token = _cancellationTokenSource.Token;    
                 Task.Factory.StartNew(() => Train(token), token).
-                    ContinueWith((res) => _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges)));
+                    ContinueWith((res) => _events.PublishOnCurrentThread(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges)));
             }
             else
             {
@@ -314,8 +313,7 @@ namespace NeuralNetworkTestUI.ViewModels
 
             var inputs = new double[Network.InputLayer.Nodes.Count()];
             var outputs = new double[Network.OutputLayer.Nodes.Count()];
-            var log = IoC.Get<IOutput>();
-            log.AppendLine("Training initiated");
+            _log.Info("Training initiated");
             var index = 0.0;
             var rows = Data.AsEnumerable().ToList();
             var total = (double)rows.Count;
@@ -326,10 +324,10 @@ namespace NeuralNetworkTestUI.ViewModels
                 if (index++%100 == 0)
                 {
                     Progress = index/total*100;
-                    log.AppendLine(String.Format("Training {0}/{1}  ({2:F2}%)", index, total, Progress));
+                    _log.Info("Training {0}/{1}  ({2:F2}%)", index, total, Progress);
                     if (IsLiveUpdate)
                     {
-                        _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
+                        _events.PublishOnCurrentThread(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
                         NotifyOfPropertyChange(() => ErrorPlot);
                     }
                 }
@@ -343,7 +341,7 @@ namespace NeuralNetworkTestUI.ViewModels
                 series.Points.Add(new DataPoint(index,error));
             }
             Progress = 100;
-            log.AppendLine("Training completed");
+            _log.Info("Training completed");
         }
 
         public void OnClear(object context)
@@ -396,8 +394,8 @@ namespace NeuralNetworkTestUI.ViewModels
 
                 rowIndex++;
             }
-            
-            _events.Publish(test);
+
+            _events.PublishOnCurrentThread(test);
             Show.Document<StatisticsViewModel>();
         }
 

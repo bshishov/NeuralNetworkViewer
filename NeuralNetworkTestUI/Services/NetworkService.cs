@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Runtime.Serialization.Formatters;
 using System.Windows;
 using Caliburn.Micro;
 using Gemini.Framework;
+using Gemini.Framework.Results;
 using Gemini.Framework.Services;
 using NeuralNetworkLibBase;
 using NeuralNetworkTestUI.Messaging;
@@ -19,6 +21,8 @@ namespace NeuralNetworkTestUI.Services
     {
         private IEventAggregator _events;
         private INeuralNetwork _network;
+
+        public IEnumerable<EditorFileType> FileTypes { get { yield return new EditorFileType("Neural network", ".nn"); } }
 
         public string DefaultExt { get { return ".json"; } }
 
@@ -43,7 +47,7 @@ namespace NeuralNetworkTestUI.Services
             try
             {
                 _network = description.Create(args);
-                _events.Publish(new NetworkUpdatedMessage(Active, NetworkUpdateType.NewNetwork));
+                _events.PublishOnCurrentThread(new NetworkUpdatedMessage(Active, NetworkUpdateType.NewNetwork));
                 CurrentProjectFilePath = null;
                 return true;
             }
@@ -67,7 +71,7 @@ namespace NeuralNetworkTestUI.Services
                     TypeNameAssemblyFormat = FormatterAssemblyStyle.Full,
                 });
                 CurrentProjectFilePath = path;
-                _events.Publish(new NetworkUpdatedMessage(Active, NetworkUpdateType.NewNetwork));
+                _events.PublishOnCurrentThread(new NetworkUpdatedMessage(Active, NetworkUpdateType.NewNetwork));
                 return true;
             }
             catch (Exception e)
@@ -98,7 +102,14 @@ namespace NeuralNetworkTestUI.Services
             return extension == DefaultExt;
         }
 
-        public IDocument Create(string path)
+        public IDocument CreateNew(string name)
+        {
+            Show.Window<NetworkCreationDialogViewModel>();
+            return null;
+            //throw new NotImplementedException();
+        }
+
+        public IDocument Open(string path)
         {
             if (FromFile(path))
                 return IoC.Get<NeuralNetworkViewModel>();

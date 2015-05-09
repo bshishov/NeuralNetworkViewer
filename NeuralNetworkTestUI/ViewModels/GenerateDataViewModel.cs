@@ -108,7 +108,7 @@ namespace NeuralNetworkTestUI.ViewModels
 
         public void OnOk(object context)
         {
-            _events.Publish(new GenerationParametersSet(Inputs,Outputs,SamplesCount));
+            _events.PublishOnCurrentThread(new GenerationParametersSet(Inputs, Outputs, SamplesCount));
             var view = (GenerateDataView)this.GetView();
             view.Close();
         }

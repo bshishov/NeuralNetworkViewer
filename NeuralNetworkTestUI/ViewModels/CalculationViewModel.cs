@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Caliburn.Micro;
 using Gemini.Framework;
 using Gemini.Framework.Services;
-using Gemini.Modules.Output;
 using NeuralNetworkLibBase;
 using NeuralNetworkTestUI.Messaging;
 
@@ -46,6 +45,7 @@ namespace NeuralNetworkTestUI.ViewModels
 
         private ObservableCollection<NamedValue> _outputs;
         private IEventAggregator _events;
+        private readonly ILog _log = LogManager.GetLog(typeof(CalculationViewModel));
 
         public ObservableCollection<NamedValue> Outputs
         {
@@ -126,9 +126,8 @@ namespace NeuralNetworkTestUI.ViewModels
         {
             if(Inputs == null)
                 return;
-            var output = IoC.Get<IOutput>();
             var inputs = Inputs.Select(i => i.Value).ToArray();
-            output.AppendLine(String.Format("Initiated calculation with inputs: \n\n\t{0}\n", String.Join("\t",inputs)));
+            _log.Info("Initiated calculation with inputs: \n\n\t{0}\n", String.Join("\t",inputs));
             var res = SelectedNetwork.Calculate(inputs);
             
             var index = 0;
@@ -138,8 +137,8 @@ namespace NeuralNetworkTestUI.ViewModels
             }
             NotifyOfPropertyChange(() => Outputs);
 
-            output.AppendLine(String.Format("Calculation finished. Results:\n\n\t{0}\n", String.Join("\t", res)));
-            _events.Publish(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
+            _log.Info("Calculation finished. Results:\n\n\t{0}\n", String.Join("\t", res));
+            _events.PublishOnCurrentThread(new NetworkUpdatedMessage(_network, NetworkUpdateType.SmallChanges));
         }
 
         public void Handle(NetworkUpdatedMessage message)

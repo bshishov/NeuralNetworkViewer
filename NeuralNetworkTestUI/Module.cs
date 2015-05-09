@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Input;
 using Caliburn.Micro;
 using Gemini.Framework;
+using Gemini.Framework.Menus;
 using Gemini.Framework.Results;
 using Gemini.Modules.MainMenu.Models;
 using Microsoft.Win32;
@@ -26,6 +27,7 @@ namespace NeuralNetworkTestUI
         [Import] WeightViewerViewModel _weightViewerViewModel;
         [Import] NetworkCreationDialogViewModel _networkCreationDialogViewModel;
         [Import] ImageOutputViewModel _imageOutputViewModel;
+        [Import] OutputViewModel _outputViewModel;
         [Import] INetworkService _networkService;
 
         public override IEnumerable<Type> DefaultTools
@@ -39,21 +41,25 @@ namespace NeuralNetworkTestUI
 
         public override void Initialize()
         {
-            var view = MainMenu.All.First(x => x.Name == "View");
-            view.Add(new MenuItem("Neuron Outputs", OpenOutputViewer));
-            view.Add(new MenuItem("Connection Weights", OpenWeightViewer));
-            view.Add(new MenuItem("Network View", ShowNetwork));
-            view.Add(new MenuItem("Calculation", ShowCalculation));
-            view.Add(new MenuItem("Statistics", ShowTestResults));
-            view.Add(new MenuItem("Training", ShowTraining));
-            view.Add(new MenuItem("Image Output", ShowImageOutput)); 
+            var view = MainMenu.OfType<TextMenuItem>().First(x=>x.Text.Contains("View"));
+            /*
+            
+            view.Add(new TextMenuItem("Neuron Outputs", OpenOutputViewer));
+            view.Add(new TextMenuItem("Connection Weights", OpenWeightViewer));
+            view.Add(new TextMenuItem("Network View", ShowNetwork));
+            view.Add(new TextMenuItem("Calculation", ShowCalculation));
+            view.Add(new TextMenuItem("Statistics", ShowTestResults));
+            view.Add(new TextMenuItem("Training", ShowTraining));
+            view.Add(new TextMenuItem("Image Output", ShowImageOutput));
+            view.Add(new TextMenuItem("Output", ShowOutput)); 
 
             var fileMenu = MainMenu.All.First(x => x.Name == "File");
-            fileMenu.Children.Insert(0, new MenuItem("_New network", CreateNetwork)
+            fileMenu.Children.Insert(0, new TextMenuItem("_New network", CreateNetwork)
                 .WithGlobalShortcut(ModifierKeys.Control, Key.N));
-            fileMenu.Children.Insert(1, new MenuItem("_Save network", SaveNetwork));
-            fileMenu.Children.Insert(2, new MenuItem("_Save network as", SaveNetworkAs)
+            fileMenu.Children.Insert(1, new TextMenuItem("_Save network", SaveNetwork));
+            fileMenu.Children.Insert(2, new TextMenuItem("_Save network as", SaveNetworkAs)
                 .WithGlobalShortcut(ModifierKeys.Control, Key.S));
+           */
         }
 
         private IEnumerable<IResult> OpenOutputViewer()
@@ -89,6 +95,11 @@ namespace NeuralNetworkTestUI
         private IEnumerable<IResult> ShowImageOutput()
         {
             yield return Show.Tool<ImageOutputViewModel>();
+        }
+
+        private IEnumerable<IResult> ShowOutput()
+        {
+            yield return Show.Tool<OutputViewModel>();
         }
 
         private IEnumerable<IResult> CreateNetwork()

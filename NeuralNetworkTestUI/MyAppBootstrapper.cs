@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.ReflectionModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Windows;
 using Caliburn.Micro;
 using Gemini.Framework.Services;
-using Gemini.Modules.MainWindow.ViewModels;
+using NeuralNetworkTestUI.Logging;
+using NLog.Config;
 
 namespace NeuralNetworkTestUI
 {
-    public class MyAppBootstrapper : Bootstrapper<IMainWindow>
+    public class MyAppBootstrapper : BootstrapperBase
     {
         #region Properties
 
@@ -21,6 +23,13 @@ namespace NeuralNetworkTestUI
         #endregion
         
         #region Methods
+
+        public MyAppBootstrapper()
+        {
+            this.Initialize();
+            ConfigurationItemFactory.Default.Targets.RegisterDefinition("ShoutingTarget", typeof(ShoutingTarget));
+            LogManager.GetLog = type => new NLogLogger(type);
+        }
 
         /// <summary>
         ///     By default, we are configured to use MEF
@@ -78,11 +87,11 @@ namespace NeuralNetworkTestUI
 
         protected override object GetInstance(Type serviceType, string key)
         {
-            var contract = string.IsNullOrEmpty(key) ? AttributedModelServices.GetContractName(serviceType) : key;
-            var exports = Container.GetExportedValues<object>(contract);
+            string contract = string.IsNullOrEmpty(key) ? AttributedModelServices.GetContractName(serviceType) : key; 
+            var exports = Container.GetExports<object>(contract);
 
-            if (exports.Count() > 0)
-                return exports.First();
+            if (exports.Any())
+                return exports.First().Value;
 
             throw new Exception(string.Format("Could not locate any instances of contract {0}.", contract));
         }
@@ -95,6 +104,17 @@ namespace NeuralNetworkTestUI
         protected override void BuildUp(object instance)
         {
             Container.SatisfyImportsOnce(instance);
+        }
+
+        protected override void OnStartup(object sender, StartupEventArgs e)
+        {
+            base.OnStartup(sender, e);
+            DisplayRootViewFor<IMainWindow>();
+        }
+
+        protected override IEnumerable<Assembly> SelectAssemblies()
+        {
+            return new[] { Assembly.GetEntryAssembly() };
         }
 
         #endregion

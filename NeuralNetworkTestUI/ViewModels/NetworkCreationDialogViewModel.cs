@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Linq;
+using Caliburn.Micro;
 using Gemini.Framework;
 using NeuralNetworkLibBase;
 using NeuralNetworkTestUI.Services;
@@ -17,7 +18,7 @@ namespace NeuralNetworkTestUI.ViewModels
 
         [ImportMany(typeof(INetworkDescription))]
         private IEnumerable<INetworkDescription> _networkTypes;
-
+        private readonly ILog _log = LogManager.GetLog(typeof(NetworkCreationDialogViewModel));
         private ObservableCollection<INetworkDescription> _networksAvailable;
         private Object _parameters;
 
@@ -63,6 +64,7 @@ namespace NeuralNetworkTestUI.ViewModels
         {
             bool result = _networkService.Create(SelectedNetwork, Parameters);
             if (!result) return;
+            _log.Info("Network created");
             var view = (NetworkCreationDialogView) GetView();
             view.Close();
         }
@@ -76,7 +78,13 @@ namespace NeuralNetworkTestUI.ViewModels
         public void OnImportsSatisfied()
         {
             _networksAvailable = new ObservableCollection<INetworkDescription>(_networkTypes);
+            if (NetworksAvailable.Count == 0)
+            {
+                _log.Error(new Exception("Network were not loaded"));
+                return;
+            }
             SelectedNetwork = NetworksAvailable.First();
+            _log.Info("Networks imported");
         }
     }
 }
